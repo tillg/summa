@@ -15,7 +15,6 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
                 
-                
                 ValueSnapshotChart(valueSource: valueSource)
                     .padding(.horizontal)
                 List {

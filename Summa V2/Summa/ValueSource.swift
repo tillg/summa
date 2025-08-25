@@ -31,18 +31,12 @@ struct ValueSnapshot: Identifiable, Codable, Hashable, Comparable {
 
 @Observable
 class ValueSource: Identifiable, Codable {
-    private var isAdjustingValueHistory = false // Needed to avoid infinite recursion of didSet
     var valueHistory = [ValueSnapshot]() {
         didSet {
-            if isAdjustingValueHistory { return }
-            isAdjustingValueHistory = true
-            // Sort in place to keep dates ascending without reassigning a new array repeatedly
-            valueHistory.sort()
             if let encoded = try? JSONEncoder().encode(valueHistory) {
                 UserDefaults.standard.set(encoded, forKey: "ValueSnapshots")
                 print("Saved ValueSnapshots to UserDefaults")
             }
-            isAdjustingValueHistory = false
         }
     }
     
