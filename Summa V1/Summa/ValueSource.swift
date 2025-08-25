@@ -13,7 +13,7 @@ enum AssetType: Codable {
     case cash
 }
 
-struct ValueSnapshot: Identifiable, Codable, Hashable {
+struct ValueSnapshot: Identifiable, Codable, Hashable, Comparable {
     let id: UUID
     let date: Date
     let value: Double
@@ -23,16 +23,26 @@ struct ValueSnapshot: Identifiable, Codable, Hashable {
         self.date = on
         self.value = value
     }
+    
+    static func < (lhs: ValueSnapshot, rhs: ValueSnapshot) -> Bool {
+        lhs.date < rhs.date
+    }
 }
 
 @Observable
 class ValueSource: Identifiable, Codable {
+    private var isAdjustingValueHistory = false // Needed to avoid infinite recursion of didSet
     var valueHistory = [ValueSnapshot]() {
         didSet {
+            if isAdjustingValueHistory { return }
+            isAdjustingValueHistory = true
+            // Sort in place to keep dates ascending without reassigning a new array repeatedly
+            valueHistory.sort()
             if let encoded = try? JSONEncoder().encode(valueHistory) {
                 UserDefaults.standard.set(encoded, forKey: "ValueSnapshots")
                 print("Saved ValueSnapshots to UserDefaults")
             }
+            isAdjustingValueHistory = false
         }
     }
     
