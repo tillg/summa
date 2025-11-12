@@ -24,41 +24,79 @@ Build within Xcode (Cmd+B) and run on simulator or device (Cmd+R).
 ### Data Model
 
 **SwiftData-based persistence with CloudKit sync:**
-- `ValueSnapshot`: SwiftData `@Model` class storing value, date, and notes
-- `ValueSourceDTO`: Observable class for DTOs (transitional, may be removed)
-- Persistence: SwiftData model container configured in `SummaApp.swift`
+
+**Series**: SwiftData `@Model` class for organizing value snapshots
+- Stores name, color (hex string), sortOrder, and creation date
+- Has optional relationship to snapshots with cascade delete
+- Maximum 10 series allowed per app
+- All fields have default values for CloudKit compatibility
+- Predefined color palette of 10 iOS system colors
+
+**ValueSnapshot**: SwiftData `@Model` class storing value, date, notes, and series
+- Stores monetary value, timestamp, and optional notes
+- Optional relationship to a Series (allows unassigned snapshots)
+- Auto-assigned to "Default" series if not explicitly set
+
+**Model Configuration:**
+- Persistence: SwiftData model container configured in `SummaApp.swift` for both `ValueSnapshot` and `Series`
 - Data access: SwiftUI `@Query` property wrapper in views
 - Model context: Environment-injected `modelContext` for CRUD operations
 - Storage: CloudKit-backed SwiftData with automatic iCloud sync across devices
+- CloudKit requirement: All relationships must be optional
 
 ### Key Components
 
 **ContentView**: Main view displaying chart and value history list
-- Uses `@Query` to access SwiftData models directly
-- Displays sorted list of value snapshots
-- Provides add button to show modal sheet
+- Uses `@Query` to access SwiftData models for both snapshots and series
+- Displays sorted list of value snapshots with series color indicators
+- Provides add button and series management navigation
+- Manages series visibility state for chart filtering
 
 **AddValueSnapshotView**: Modal form for adding new value snapshots
-- Uses environment `modelContext` to insert new records
+- Series picker at top (remembers last used series via UserDefaults)
 - TextField for value input with number formatting
 - DatePicker for snapshot date
-- Optional notes field
+- Optional notes field (multi-line)
+- Validates that a series is selected before saving
 
-**ValueSnapshotChart**: Chart component with time period filtering (Week/Month/Year/All)
-- Uses SwiftUI Charts framework
-- Filters and sorts data based on selected period
+**ValueSnapshotChart**: Multi-series chart component with time period filtering
+- Uses SwiftUI Charts framework with separate lines per series
+- Time period options: Week/Month/Year/All
+- Interactive legend with visibility toggles (tap series chips to show/hide)
+- Each series rendered in its configured color
 - Dynamic Y-axis scaling based on visible data range
-- Line chart visualization of value over time
+- Horizontal scrolling legend for multiple series
+- Empty state when no data available for selected period
+
+**SeriesManagementView**: Full CRUD interface for managing series
+- List view showing all series with latest values and entry counts
+- Add/Edit series with name and color picker (10 predefined colors)
+- Delete with name confirmation (user must type series name to confirm)
+- Swipe-to-delete gesture
+- Maximum 10 series enforcement
+- Shows statistics per series
+
+**SeriesManager**: Singleton service for series operations
+- Auto-creates "Default" series on first launch
+- Auto-assigns unassigned snapshots to default series
+- Manages last used series persistence (UserDefaults)
+- Handles legacy data migration ("Net Worth" → "Default")
+- Deduplicates series by name on startup
+- Provides hex-to-Color conversion utility
+- Maintains predefined color palette
 
 ### Code Organization
 
 Swift files are located in `Summa/Summa/`:
 - `SummaApp.swift` - App entry point with SwiftData container configuration
-- `ContentView.swift` - Main UI with value history list
-- `AddValueSnapshotView.swift` - Add entry form
-- `ValueSnapshotChart.swift` - Chart visualization component
-- `ValueSnapshot.swift` - SwiftData model
-- `ValueSourceDTO.swift` - DTO classes (transitional)
+- `ContentView.swift` - Main UI with chart and value history list
+- `AddValueSnapshotView.swift` - Add entry form with series picker
+- `ValueSnapshotChart.swift` - Multi-series chart visualization component
+- `SeriesManagementView.swift` - Series CRUD interface (list and edit views)
+- `Series.swift` - Series SwiftData model
+- `ValueSnapshot.swift` - ValueSnapshot SwiftData model with series relationship
+- `SeriesManager.swift` - Series management service and utilities
+- `ValueSourceDTO.swift` - DTO classes (transitional, may be removed)
 - `DateExtension.swift` - Date utility extensions
 
 ## Working with SwiftData
@@ -66,7 +104,29 @@ Swift files are located in `Summa/Summa/`:
 - Models use `@Model` macro
 - Access data via `@Query` in SwiftUI views
 - Insert/delete via `modelContext.insert()` / `modelContext.delete()`
-- Model container is configured in app entry point for `ValueSnapshot.self`
+- Model container is configured in app entry point for both `ValueSnapshot.self` and `Series.self`
+- Relationships use `@Relationship` macro (e.g., `@Relationship(deleteRule: .cascade)`)
+- **CloudKit requirement**: All relationships must be optional (use `Type?` not `Type`)
+- All model fields should have default values for CloudKit compatibility
 - Data syncs automatically to iCloud via CloudKit
 - CloudKit capabilities are configured in the Xcode project
 - Data is accessible across devices signed into the same iCloud account
+
+## Multiple Series Feature
+
+The app supports tracking multiple series (e.g., different accounts, portfolios, asset types):
+
+**Key Behaviors:**
+- Maximum 10 series per app (enforced in UI)
+- "Default" series auto-created on first launch
+- Unassigned snapshots automatically assigned to default series
+- Last used series remembered via UserDefaults (key: "lastUsedSeriesID")
+- Series deletion requires name confirmation to prevent accidental data loss
+- Cascade delete: deleting a series deletes all its snapshots
+- Chart supports toggling series visibility via interactive legend
+- Each series has a unique color from predefined palette
+
+**Data Migration:**
+- Legacy "Net Worth" series automatically renamed to "Default"
+- Duplicate series (same name) automatically merged on startup
+- Old snapshots without series assignment auto-linked to default series

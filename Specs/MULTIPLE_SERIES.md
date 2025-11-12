@@ -37,12 +37,15 @@ class Series {
     var color: String = "" // Hex color
     var sortOrder: Int = 0
     var createdAt: Date = Date()
-    @Relationship(deleteRule: .cascade) var snapshots: [ValueSnapshot] = []
+    @Relationship(deleteRule: .cascade) var snapshots: [ValueSnapshot]?
 
     init(name: String, color: String, sortOrder: Int) {
+        self.id = UUID()
         self.name = name
         self.color = color
         self.sortOrder = sortOrder
+        self.createdAt = Date()
+        self.snapshots = nil
     }
 }
 
@@ -65,10 +68,12 @@ class ValueSnapshot {
 **Key Points:**
 
 - All fields have default values for CloudKit compatibility
+- **CloudKit Critical**: Relationships MUST be optional (`Type?` not `Type`)
 - SwiftData handles cascading deletes automatically
 - Clear relationship and data integrity
 - Native CloudKit sync support
 - Series is optional on ValueSnapshot for flexibility
+- Initializer explicitly sets all values including id and createdAt
 
 ---
 
@@ -247,10 +252,11 @@ These are iOS system colors with good contrast and accessibility.
 
 **Chart Visualization:**
 
-- **Multiple Lines**: Each visible series as separate line on same chart
+- **Multiple Lines**: Each visible series as separate line on same chart (using `series:` parameter in LineMark)
 - **Colors**: Use series colors for lines
 - **Y-Axis Scaling**: Unified scale (all series use same Y-axis to show relative magnitudes)
-- **Line Style**: Solid lines, consistent thickness
+- **Line Style**: Solid lines, consistent thickness (3pt line width)
+- **Legend Layout**: Horizontal scrolling layout instead of wrapping
 
 **UI Draft - Main Content View:**
 
@@ -292,20 +298,23 @@ These are iOS system colors with good contrast and accessibility.
 
 ### 6. Data Migration Strategy
 
-**Simple Approach (Old Data Can Be Ignored):**
+**Implemented Approach:**
 
-Since old data can be ignored, we can start fresh:
+Auto-migration ensures all data is visible and properly assigned:
 
 1. **Add Series Model**: Create new Series model with default values
-2. **Create Default Series**: On first launch, create a "Net Worth" series as default
-3. **Update UI**: All new snapshots must be associated with a series
-4. **No Migration**: Existing ValueSnapshots without series can be filtered out or shown in a "Uncategorized" view (optional)
+2. **Create Default Series**: On first launch, create "Default" series with blue color
+3. **Auto-assign Unassigned Snapshots**: All ValueSnapshots without a series are automatically assigned to the default series on app launch
+4. **Legacy Cleanup**: Any existing "Net Worth" series are automatically renamed to "Default"
+5. **Duplicate Cleanup**: Duplicate series with the same name are automatically merged (snapshots reassigned to kept series, duplicates deleted)
 
 **First Launch Flow:**
 
 1. Check if any Series exist in database
-2. If none, create default "Net Worth" series with blue color
+2. If none, create default "Default" series with blue color (#007AFF)
 3. Set as "last used series" in UserDefaults
+4. Find all unassigned snapshots and link them to default series
+5. Save changes
 
 ---
 
@@ -322,9 +331,9 @@ Since old data can be ignored, we can start fresh:
 **Empty Series:**
 
 - Allow creating series without snapshots
-- Show in management UI
-- Don't show in chart legend until data exists
-- Show "0 entries" in management list
+- Show in management UI with "0 entries"
+- Show in chart legend (but no line appears if no data)
+- Can toggle visibility even when empty
 
 **Series Limits:**
 
@@ -335,8 +344,9 @@ Since old data can be ignored, we can start fresh:
 **CloudKit Sync:**
 
 - All model fields have default values (CloudKit compatible)
-- Test sync behavior with relationships
-- Consider conflict resolution (series deleted on one device while adding snapshot on another)
+- **Critical**: All relationships must be optional (CloudKit requirement)
+- Handles auto-assignment on each device independently
+- Duplicate cleanup runs on each launch to handle sync conflicts
 
 **Last Used Series:**
 
@@ -346,23 +356,29 @@ Since old data can be ignored, we can start fresh:
 
 ---
 
-## Implementation Phases
+## Implementation Status
 
-### MVP (Phase 1) - Required
+### ✅ Completed (MVP - Phase 1)
 
-- Series model with name, color, and default values
-- Series management screen (add, edit, delete with name confirmation)
-- Series picker in add value view with last-used persistence
-- Multiple lines on chart with series colors
-- Legend-based visibility toggle
-- Maximum 10 series enforcement
+- ✅ Series model with name, color, and default values
+- ✅ Series management screen (add, edit, delete with name confirmation)
+- ✅ Series picker in add value view with last-used persistence
+- ✅ Multiple lines on chart with series colors
+- ✅ Legend-based visibility toggle (horizontal scrolling layout)
+- ✅ Maximum 10 series enforcement
+- ✅ Auto-migration of unassigned snapshots
+- ✅ Legacy data cleanup (rename, deduplicate)
+- ✅ Per-series statistics in management view (latest value, entry count)
+- ✅ CloudKit sync compatibility
 
-### Future (Phase 2) - Optional
+### 🔮 Future Enhancements (Optional)
 
 - Series reordering (drag handles in management list)
-- Per-series statistics in management view
-- Enhanced color picker
+- Enhanced color picker (custom colors)
 - Series icons/symbols
+- Series archiving (hide without deleting)
+- Per-series statistics dashboard
+- Export/import series data
 
 ---
 
@@ -377,20 +393,59 @@ All fields must have default values or be optional for CloudKit:
 - ✅ `var color: String = ""`
 - ✅ `var sortOrder: Int = 0`
 - ✅ `var createdAt: Date = Date()`
-- ✅ `var snapshots: [ValueSnapshot] = []` (relationship)
+- ✅ `var snapshots: [ValueSnapshot]?` (optional relationship - **MUST be optional for CloudKit**)
 - ✅ `var series: Series?` (optional relationship)
+
+**Critical Learning**: CloudKit requires ALL relationships to be optional. Using `[ValueSnapshot] = []` (non-optional) will cause sync to fail with error: "CloudKit integration requires that all relationships be optional".
 
 ### SwiftData Relationships
 
 - `@Relationship(deleteRule: .cascade)` ensures snapshots are deleted when series is deleted
 - SwiftData automatically handles CloudKit sync for relationships
+- Relationships must be optional for CloudKit: `var snapshots: [ValueSnapshot]?`
+- Access optional relationships with nil-coalescing: `series.snapshots?.count ?? 0`
 - Query snapshots by series: `@Query(filter: #Predicate<ValueSnapshot> { $0.series?.id == seriesId })`
+
+### Chart Implementation
+
+- Use `series:` parameter in `LineMark` to separate lines: `LineMark(x: ..., y: ..., series: .value("Series", series.name))`
+- Without `series:` parameter, all data points connect into one line
+- Filter visible series before passing to chart
+- Use horizontal `ScrollView` with `HStack` for legend (avoids custom layout complexity)
 
 ### Testing Considerations
 
-- Test cascade delete behavior
-- Test CloudKit sync with multiple devices
-- Test conflict resolution (series deleted on one device)
-- Test maximum series limit enforcement
-- Test series name confirmation for deletion
-- Test last-used series persistence across app restarts
+- ✅ Test cascade delete behavior
+- ✅ Test CloudKit sync with multiple devices
+- ✅ Test conflict resolution (duplicate cleanup handles sync conflicts)
+- ✅ Test maximum series limit enforcement
+- ✅ Test series name confirmation for deletion
+- ✅ Test last-used series persistence across app restarts
+- ✅ Test auto-assignment of unassigned snapshots
+- ✅ Test legacy "Net Worth" → "Default" migration
+- ✅ Test chart rendering with multiple series
+- ✅ Test visibility toggling
+
+---
+
+## Files Created
+
+**Models:**
+
+- `Series.swift` - Series SwiftData model
+- Updated `ValueSnapshot.swift` - Added series relationship and notes field
+
+**Views:**
+
+- `SeriesManagementView.swift` - Series list and edit/add forms
+- Updated `ContentView.swift` - Added series management button and visibility state
+- Updated `AddValueSnapshotView.swift` - Added series picker and notes field
+- Updated `ValueSnapshotChart.swift` - Multi-series rendering with legend
+
+**Services:**
+
+- `SeriesManager.swift` - Singleton for series operations, auto-migration, and utilities
+
+**Configuration:**
+
+- Updated `SummaApp.swift` - Added Series to model container, calls initialization
