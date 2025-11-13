@@ -34,8 +34,7 @@ Build within Xcode (Cmd+B) and run on simulator or device (Cmd+R).
 
 **ValueSnapshot**: SwiftData `@Model` class storing value, date, notes, and series
 - Stores monetary value, timestamp, and optional notes
-- Optional relationship to a Series (allows unassigned snapshots)
-- Auto-assigned to "Default" series if not explicitly set
+- Optional relationship to a Series
 
 **Model Configuration:**
 - Persistence: SwiftData model container configured in `SummaApp.swift` for both `ValueSnapshot` and `Series`
@@ -78,25 +77,29 @@ Build within Xcode (Cmd+B) and run on simulator or device (Cmd+R).
 
 **SeriesManager**: Singleton service for series operations
 - Auto-creates "Default" series on first launch
-- Auto-assigns unassigned snapshots to default series
 - Manages last used series persistence (UserDefaults)
-- Handles legacy data migration ("Net Worth" → "Default")
-- Deduplicates series by name on startup
 - Provides hex-to-Color conversion utility
 - Maintains predefined color palette
 
 ### Code Organization
 
-Swift files are located in `Summa/Summa/`:
+Swift files are organized in `Summa/Summa/` with the following structure:
+
+**Root:**
 - `SummaApp.swift` - App entry point with SwiftData container configuration
+
+**Models/** - SwiftData models
+- `Series.swift` - Series SwiftData model
+- `ValueSnapshot.swift` - ValueSnapshot SwiftData model with series relationship
+
+**Views/** - SwiftUI views
 - `ContentView.swift` - Main UI with chart and value history list
 - `AddValueSnapshotView.swift` - Add entry form with series picker
 - `ValueSnapshotChart.swift` - Multi-series chart visualization component
 - `SeriesManagementView.swift` - Series CRUD interface (list and edit views)
-- `Series.swift` - Series SwiftData model
-- `ValueSnapshot.swift` - ValueSnapshot SwiftData model with series relationship
+
+**Utils/** - Utilities and services
 - `SeriesManager.swift` - Series management service and utilities
-- `ValueSourceDTO.swift` - DTO classes (transitional, may be removed)
 - `DateExtension.swift` - Date utility extensions
 
 ## Working with SwiftData
@@ -119,14 +122,8 @@ The app supports tracking multiple series (e.g., different accounts, portfolios,
 **Key Behaviors:**
 - Maximum 10 series per app (enforced in UI)
 - "Default" series auto-created on first launch
-- Unassigned snapshots automatically assigned to default series
 - Last used series remembered via UserDefaults (key: "lastUsedSeriesID")
 - Series deletion requires name confirmation to prevent accidental data loss
 - Cascade delete: deleting a series deletes all its snapshots
 - Chart supports toggling series visibility via interactive legend
 - Each series has a unique color from predefined palette
-
-**Data Migration:**
-- Legacy "Net Worth" series automatically renamed to "Default"
-- Duplicate series (same name) automatically merged on startup
-- Old snapshots without series assignment auto-linked to default series

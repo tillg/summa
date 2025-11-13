@@ -47,27 +47,3 @@ class ValueSnapshot: Identifiable, Equatable, Hashable {
             hasher.combine(value)
         }
 }
-
-//@Model
-//class ValueSource: Identifiable {
-//    var valueHistory = [ValueSnapshot]()
-//        
-//    init(valueHistory: [ValueSnapshot]) {
-//        self.valueHistory = valueHistory
-//    }
-//    
-//    static let examples: ValueSource = ValueSource(valueHistory: [
-//        ValueSnapshot(on: Date(daysSinceNow: -30), value:16.7),
-//        ValueSnapshot(on: Date(daysSinceNow: -26), value:18.3),
-//        ValueSnapshot(on: Date(daysSinceNow:    -7), value:32.3),
-//        ValueSnapshot(on: Date(daysSinceNow: -20), value:17.1),
-//        ValueSnapshot(on: Date(daysSinceNow:    -17), value:20.3),
-//        ValueSnapshot(on: Date(daysSinceNow:    -12), value:26.3),
-//        ValueSnapshot(on: Date(daysSinceNow:    -5), value:22.3),
-//        ValueSnapshot(on: Date(daysSinceNow:    -3), value:35.3)
-//        ]
-//    )
-//
-//}
-
-

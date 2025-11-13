@@ -132,7 +132,3 @@ struct ValueSnapshotChart: View {
         }
     }
 }
-
-#Preview {
-    // ValueSnapshotChart preview
-}
