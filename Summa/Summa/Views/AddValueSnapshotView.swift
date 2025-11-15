@@ -17,7 +17,6 @@ struct AddValueSnapshotView: View {
 
     @State private var date = Date.now
     @State private var value: Double = 0
-    @State private var notes: String = ""
     @State private var selectedSeries: Series?
 
     var body: some View {
@@ -47,9 +46,6 @@ struct AddValueSnapshotView: View {
                             .keyboardType(.decimalPad)
 
                         DatePicker("Date", selection: $date)
-
-                        TextField("Notes (Optional)", text: $notes, axis: .vertical)
-                            .lineLimit(3...6)
                     }
                 }
                 .navigationTitle("Add Entry")
@@ -65,7 +61,6 @@ struct AddValueSnapshotView: View {
                             let valueSnapshot = ValueSnapshot(
                                 on: date,
                                 value: value,
-                                notes: notes.isEmpty ? nil : notes,
                                 series: selectedSeries
                             )
                             modelContext.insert(valueSnapshot)
