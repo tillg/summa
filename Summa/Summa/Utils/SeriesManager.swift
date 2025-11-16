@@ -42,23 +42,26 @@ class SeriesManager {
 
     @MainActor
     func initializeDefaultSeriesIfNeeded() {
+        print ("initializeDefaultSeriesIfNeeded: Entering...")
+        
         guard let modelContext = modelContext else { return }
 
         let seriesDescriptor = FetchDescriptor<Series>()
         let existingSeries = (try? modelContext.fetch(seriesDescriptor)) ?? []
 
-        // Create default series if none exist
-        if existingSeries.isEmpty {
+        // Check if a default series already exists
+        let hasDefaultSeries = existingSeries.contains { $0.isDefault }
+
+        // Create default series only if no default series exists
+        if !hasDefaultSeries {
+            print("initializeDefaultSeriesIfNeeded: Creating a default series, as no series was tagged as default!")
             let defaultSeries = Series(
                 name: "Default",
                 color: SeriesManager.predefinedColors[4], // Blue
-                sortOrder: 0
+                sortOrder: 0,
+                isDefault: true
             )
             modelContext.insert(defaultSeries)
-
-            // Set as last used series
-            UserDefaults.standard.set(defaultSeries.id.uuidString, forKey: "lastUsedSeriesID")
-
             try? modelContext.save()
         }
     }
@@ -74,6 +77,20 @@ class SeriesManager {
 
     func setLastUsedSeries(_ series: Series) {
         UserDefaults.standard.set(series.id.uuidString, forKey: "lastUsedSeriesID")
+    }
+
+    @MainActor
+    func setDefaultSeries(_ newDefaultSeries: Series, allSeries: [Series], context: ModelContext) {
+        // Remove default flag from all series
+        for series in allSeries {
+            series.isDefault = false
+        }
+
+        // Set the new default
+        newDefaultSeries.isDefault = true
+
+        // Save changes
+        try? context.save()
     }
 
     func colorFromHex(_ hex: String) -> Color {

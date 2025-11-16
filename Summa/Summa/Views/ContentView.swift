@@ -69,8 +69,11 @@ struct ContentView: View {
             .sheet(isPresented: $showingSeriesManagement) {
                 SeriesManagementView()
             }
-            .onAppear {
+            .task {
+                // Set model context and initialize default series
                 SeriesManager.shared.setModelContext(modelContext)
+                SeriesManager.shared.initializeDefaultSeriesIfNeeded()
+
                 // Initialize all series as visible by default
                 visibleSeriesIDs = Set(allSeries.map { $0.id })
             }

@@ -13,9 +13,6 @@ struct SummaApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .onAppear {
-                    SeriesManager.shared.initializeDefaultSeriesIfNeeded()
-                }
         }
         .modelContainer(for: [ValueSnapshot.self, Series.self])
     }

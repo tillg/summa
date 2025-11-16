@@ -31,8 +31,20 @@ struct SeriesManagementView: View {
                                 .frame(width: 20, height: 20)
 
                             VStack(alignment: .leading) {
-                                Text(series.name)
-                                    .foregroundColor(.primary)
+                                HStack {
+                                    Text(series.name)
+                                        .foregroundColor(.primary)
+                                    if series.isDefault {
+                                        Text("DEFAULT")
+                                            .font(.caption2)
+                                            .fontWeight(.semibold)
+                                            .padding(.horizontal, 6)
+                                            .padding(.vertical, 2)
+                                            .background(Color.blue.opacity(0.2))
+                                            .foregroundColor(.blue)
+                                            .cornerRadius(4)
+                                    }
+                                }
                                 if let snapshots = series.snapshots,
                                    let latestSnapshot = snapshots.sorted(by: { $0.date > $1.date }).first {
                                     Text(latestSnapshot.value.formatted(.currency(code: Locale.current.currency?.identifier ?? "EUR")))
@@ -49,11 +61,13 @@ struct SeriesManagementView: View {
                         }
                     }
                     .swipeActions {
-                        Button(role: .destructive) {
-                            showingDeleteConfirmation = series
-                            deleteConfirmationText = ""
-                        } label: {
-                            Label("Delete", systemImage: "trash")
+                        if !series.isDefault {
+                            Button(role: .destructive) {
+                                showingDeleteConfirmation = series
+                                deleteConfirmationText = ""
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
                         }
                     }
                 }
@@ -89,13 +103,15 @@ struct SeriesManagementView: View {
                 }
                 Button("Delete", role: .destructive) {
                     if let series = showingDeleteConfirmation,
-                       deleteConfirmationText == series.name {
+                       deleteConfirmationText == series.name,
+                       !series.isDefault {
                         modelContext.delete(series)
                         showingDeleteConfirmation = nil
                         deleteConfirmationText = ""
+                        try? modelContext.save()
                     }
                 }
-                .disabled(deleteConfirmationText != showingDeleteConfirmation?.name)
+                .disabled(deleteConfirmationText != showingDeleteConfirmation?.name || showingDeleteConfirmation?.isDefault == true)
             } message: {
                 if let series = showingDeleteConfirmation {
                     Text("This will delete \(series.snapshots?.count ?? 0) entries. This action cannot be undone.\n\nTo confirm, enter the series name:")
@@ -114,6 +130,7 @@ struct EditSeriesView: View {
 
     @State private var name: String = ""
     @State private var selectedColor: String = SeriesManager.predefinedColors[0]
+    @State private var isDefault: Bool = false
 
     var body: some View {
         NavigationStack {
@@ -145,6 +162,13 @@ struct EditSeriesView: View {
                     }
                     .padding(.vertical, 8)
                 }
+
+                Section {
+                    Toggle("Set as default series", isOn: $isDefault)
+                } footer: {
+                    Text("The default series is used for new entries and cannot be deleted.")
+                        .font(.caption)
+                }
             }
             .navigationTitle(series == nil ? "Add Series" : "Edit Series")
             .navigationBarTitleDisplayMode(.inline)
@@ -159,13 +183,24 @@ struct EditSeriesView: View {
                         if let series = series {
                             series.name = name
                             series.color = selectedColor
+
+                            // Handle default series change
+                            if isDefault && !series.isDefault {
+                                SeriesManager.shared.setDefaultSeries(series, allSeries: allSeries, context: modelContext)
+                            }
                         } else {
                             let newSeries = Series(
                                 name: name,
                                 color: selectedColor,
-                                sortOrder: allSeries.count
+                                sortOrder: allSeries.count,
+                                isDefault: isDefault
                             )
                             modelContext.insert(newSeries)
+
+                            // If this is marked as default, ensure no other series is default
+                            if isDefault {
+                                SeriesManager.shared.setDefaultSeries(newSeries, allSeries: allSeries + [newSeries], context: modelContext)
+                            }
                         }
                         try? modelContext.save()
                         dismiss()
@@ -177,6 +212,7 @@ struct EditSeriesView: View {
                 if let series = series {
                     name = series.name
                     selectedColor = series.color
+                    isDefault = series.isDefault
                 }
             }
         }
