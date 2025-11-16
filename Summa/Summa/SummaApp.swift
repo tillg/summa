@@ -14,6 +14,6 @@ struct SummaApp: App {
         WindowGroup {
             ContentView()
         }
-        .modelContainer(for: ValueSnapshot.self)
+        .modelContainer(for: [ValueSnapshot.self, Series.self])
     }
 }
