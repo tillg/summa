@@ -49,14 +49,14 @@ struct ValueSnapshotChart: View {
     }
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: horizontalSizeClass == .compact ? 10 : 12) {
             // Chart area
             Group {
                 if valuesToDraw.isEmpty {
                     Text("No data for selected period")
                         .foregroundColor(.secondary)
-                        .frame(height: horizontalSizeClass == .compact ? 200 : nil)
-                        .frame(maxHeight: horizontalSizeClass == .regular ? .infinity : nil)
+                        .frame(minHeight: 100)
+                        .frame(maxHeight: .infinity)
                 } else {
                     Chart {
                         ForEach(allSeries.filter { series in
@@ -75,9 +75,8 @@ struct ValueSnapshotChart: View {
                         }
                     }
                     .chartYScale(domain: [minValueToDraw, maxValueToDraw])
-                    // Adaptive height: compact = fixed 200pt, regular = fill available space
-                    .frame(height: horizontalSizeClass == .compact ? 200 : nil)
-                    .frame(maxHeight: horizontalSizeClass == .regular ? .infinity : nil)
+                    .frame(minHeight: 100)
+                    .frame(maxHeight: .infinity)
                 }
             }
 
@@ -89,13 +88,16 @@ struct ValueSnapshotChart: View {
                 Text("All").tag(everAgo)
             }
             .pickerStyle(.segmented)
+            .padding(.bottom, 8)  // Add spacing after picker
 
             // Legend with visibility toggles
             if !allSeries.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Series (tap to toggle)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                VStack(alignment: .leading, spacing: 4) {
+                    if horizontalSizeClass != .compact {
+                        Text("Series (tap to toggle)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
 
                     // Use native SwiftUI layout instead of custom FlowLayout
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -118,8 +120,8 @@ struct ValueSnapshotChart: View {
                                             .font(.caption)
                                             .foregroundColor(visibleSeriesIDs.contains(series.id) ? .primary : .secondary)
                                     }
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 6)
+                                    .padding(.horizontal, horizontalSizeClass == .compact ? 8 : 10)
+                                    .padding(.vertical, horizontalSizeClass == .compact ? 4 : 6)
                                     .background(
                                         RoundedRectangle(cornerRadius: 12)
                                             #if os(iOS)

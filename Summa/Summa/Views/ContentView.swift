@@ -63,7 +63,9 @@ struct ContentView: View {
                 #endif
             }
         }
+            #if os(macOS)
             .frame(minWidth: 500, minHeight: 400)
+            #endif
             .sheet(isPresented: $showingAddValueSnapshot) {
                 NavigationStack {
                     ValueSnapshotFormView(snapshot: nil)
@@ -144,7 +146,7 @@ struct ContentView: View {
     private var compactLayout: some View {
         VStack(spacing: 0) {
             chartSection
-                .frame(height: 250)
+                .frame(height: 280)  // Fixed height that works for iPhone
             Divider()
             listSection
         }
@@ -182,8 +184,21 @@ struct ContentView: View {
 
     /// List section showing value history
     private var listSection: some View {
-        List {
-            Section(header: Text("Value history")) {
+        VStack(spacing: 0) {
+            // Header bar similar to navigation bar
+            HStack {
+                Text("Value history")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                Spacer()
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 12)
+            .background(Color(UIColor.systemBackground))
+
+            Divider()
+
+            List {
                 ForEach(valueHistory.sorted(by: { $0.date > $1.date }), id: \.self) { value in
                     Button {
                         editingSnapshot = value
@@ -196,28 +211,53 @@ struct ContentView: View {
                     #endif
                 }
             }
+            .listStyle(.plain)
         }
-        .listStyle(.plain)
     }
 
     /// Individual row in the value history list
     private func valueRow(for value: ValueSnapshot) -> some View {
-        HStack {
+        HStack(alignment: .top, spacing: 8) {
             if let series = value.series {
                 Circle()
                     .fill(SeriesManager.shared.colorFromHex(series.color))
                     .frame(width: 12, height: 12)
+                    .padding(.top, horizontalSizeClass == .regular ? 3 : 0)
             }
-            VStack(alignment: .leading) {
-                Text("\(value.date.formatted(date: .abbreviated, time: .shortened))")
-                if let series = value.series {
-                    Text(series.name)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+
+            if horizontalSizeClass == .regular {
+                // iPad layout: two lines
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("\(value.date.formatted(date: .abbreviated, time: .shortened))")
+                        .lineLimit(1)
+
+                    HStack {
+                        if let series = value.series {
+                            Text(series.name)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        Text(value.value.formatted(.currency(code: Locale.current.currency?.identifier ?? "EUR")))
+                            .fontWeight(.medium)
+                    }
                 }
+            } else {
+                // iPhone layout: compact single line
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(value.date.formatted(date: .abbreviated, time: .shortened))")
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                    if let series = value.series {
+                        Text(series.name)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                Spacer()
+                Text(value.value.formatted(.currency(code: Locale.current.currency?.identifier ?? "EUR")))
+                    .fontWeight(.medium)
             }
-            Spacer()
-            Text(value.value.formatted(.currency(code: Locale.current.currency?.identifier ?? "EUR")))
         }
     }
 }
