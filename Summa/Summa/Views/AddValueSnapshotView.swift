@@ -12,7 +12,6 @@ import SwiftUI
 struct AddValueSnapshotView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) var modelContext
-    @Query var valueHistory: [ValueSnapshot]
     @Query(sort: \Series.sortOrder) var allSeries: [Series]
 
     @State private var date = Date.now

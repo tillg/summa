@@ -1,5 +1,5 @@
 //
-//  ValueSource.swift
+//  ValueSnapshot.swift
 //  Summa
 //
 //  Created by Till Gartner on 09.08.25.
@@ -7,12 +7,6 @@
 
 import Foundation
 import SwiftData
-
-enum AssetType: Codable {
-    case account
-    case stockPortfolio
-    case cash
-}
 
 @Model
 class ValueSnapshot: Identifiable, Equatable, Hashable {
