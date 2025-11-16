@@ -14,6 +14,7 @@ struct ContentView: View {
     @Query(sort: \Series.sortOrder) var allSeries: [Series]
     @State private var showingAddValueSnapshot: Bool = false
     @State private var showingSeriesManagement: Bool = false
+    @State private var editingSnapshot: ValueSnapshot?
     @State private var visibleSeriesIDs: Set<UUID> = []
 
     var body: some View {
@@ -26,23 +27,28 @@ struct ContentView: View {
                 List {
                     Section(header: Text("Value history")) {
                         ForEach(valueHistory.sorted(by: { $0.date > $1.date }), id: \.self) { value in
-                            HStack {
-                                if let series = value.series {
-                                    Circle()
-                                        .fill(SeriesManager.shared.colorFromHex(series.color))
-                                        .frame(width: 12, height: 12)
-                                }
-                                VStack(alignment: .leading) {
-                                    Text("\(value.date.formatted(date: .abbreviated, time: .shortened))")
+                            Button {
+                                editingSnapshot = value
+                            } label: {
+                                HStack {
                                     if let series = value.series {
-                                        Text(series.name)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
+                                        Circle()
+                                            .fill(SeriesManager.shared.colorFromHex(series.color))
+                                            .frame(width: 12, height: 12)
                                     }
+                                    VStack(alignment: .leading) {
+                                        Text("\(value.date.formatted(date: .abbreviated, time: .shortened))")
+                                        if let series = value.series {
+                                            Text(series.name)
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                    Spacer()
+                                    Text(value.value.formatted(.currency(code: Locale.current.currency?.identifier ?? "EUR")))
                                 }
-                                Spacer()
-                                Text(value.value.formatted(.currency(code: Locale.current.currency?.identifier ?? "EUR")))
                             }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -64,7 +70,10 @@ struct ContentView: View {
                 }
             }
             .sheet(isPresented: $showingAddValueSnapshot) {
-                AddValueSnapshotView()
+                ValueSnapshotFormView(snapshot: nil)
+            }
+            .sheet(item: $editingSnapshot) { snapshot in
+                ValueSnapshotFormView(snapshot: snapshot)
             }
             .sheet(isPresented: $showingSeriesManagement) {
                 SeriesManagementView()

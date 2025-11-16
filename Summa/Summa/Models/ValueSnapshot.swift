@@ -29,7 +29,6 @@ class ValueSnapshot: Identifiable, Equatable, Hashable {
         lhs.id == rhs.id
     }
     func hash(into hasher: inout Hasher) {
-            hasher.combine(date)
-            hasher.combine(value)
-        }
+        hasher.combine(id)
+    }
 }

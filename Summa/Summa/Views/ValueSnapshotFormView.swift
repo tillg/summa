@@ -1,5 +1,5 @@
 //
-//  AddValueSnapshotView.swift
+//  ValueSnapshotFormView.swift
 //  Summa
 //
 //  Created by Till Gartner on 10.08.25.
@@ -9,10 +9,12 @@ import Foundation
 import SwiftData
 import SwiftUI
 
-struct AddValueSnapshotView: View {
+struct ValueSnapshotFormView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) var modelContext
     @Query(sort: \Series.sortOrder) var allSeries: [Series]
+
+    let snapshot: ValueSnapshot?
 
     @State private var date = Date.now
     @State private var value: Double = 0
@@ -47,7 +49,7 @@ struct AddValueSnapshotView: View {
                         DatePicker("Date", selection: $date)
                     }
                 }
-                .navigationTitle("Add Entry")
+                .navigationTitle(snapshot == nil ? "Add Entry" : "Edit Entry")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .navigationBarLeading) {
@@ -57,27 +59,43 @@ struct AddValueSnapshotView: View {
                     }
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button("Save") {
-                            let valueSnapshot = ValueSnapshot(
-                                on: date,
-                                value: value,
-                                series: selectedSeries
-                            )
-                            modelContext.insert(valueSnapshot)
+                            if let snapshot = snapshot {
+                                // Edit existing snapshot
+                                snapshot.date = date
+                                snapshot.value = value
+                                snapshot.series = selectedSeries
+                            } else {
+                                // Create new snapshot
+                                let valueSnapshot = ValueSnapshot(
+                                    on: date,
+                                    value: value,
+                                    series: selectedSeries
+                                )
+                                modelContext.insert(valueSnapshot)
+                            }
 
                             // Remember last used series
                             if let selectedSeries = selectedSeries {
                                 SeriesManager.shared.setLastUsedSeries(selectedSeries)
                             }
 
+                            try? modelContext.save()
                             dismiss()
                         }
                         .disabled(selectedSeries == nil)
                     }
                 }
                 .onAppear {
-                    // Set default series to last used
-                    if selectedSeries == nil {
-                        selectedSeries = SeriesManager.shared.getLastUsedSeries(from: allSeries)
+                    if let snapshot = snapshot {
+                        // Editing existing snapshot
+                        date = snapshot.date
+                        value = snapshot.value
+                        selectedSeries = snapshot.series
+                    } else {
+                        // Adding new snapshot - set default series to last used
+                        if selectedSeries == nil {
+                            selectedSeries = SeriesManager.shared.getLastUsedSeries(from: allSeries)
+                        }
                     }
                 }
         }
