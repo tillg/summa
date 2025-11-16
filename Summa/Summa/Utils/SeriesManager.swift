@@ -42,8 +42,6 @@ class SeriesManager {
 
     @MainActor
     func initializeDefaultSeriesIfNeeded() {
-        print ("initializeDefaultSeriesIfNeeded: Entering...")
-        
         guard let modelContext = modelContext else { return }
 
         let seriesDescriptor = FetchDescriptor<Series>()
@@ -54,7 +52,6 @@ class SeriesManager {
 
         // Create default series only if no default series exists
         if !hasDefaultSeries {
-            print("initializeDefaultSeriesIfNeeded: Creating a default series, as no series was tagged as default!")
             let defaultSeries = Series(
                 name: "Default",
                 color: SeriesManager.predefinedColors[4], // Blue

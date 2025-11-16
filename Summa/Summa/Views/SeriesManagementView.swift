@@ -11,7 +11,8 @@ import SwiftData
 struct SeriesManagementView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) var modelContext
-    @Query(sort: \Series.sortOrder) var allSeries: [Series]
+
+    let allSeries: [Series]
 
     @State private var showingAddSeries = false
     @State private var showingEditSeries: Series?
@@ -19,47 +20,15 @@ struct SeriesManagementView: View {
     @State private var deleteConfirmationText = ""
 
     var body: some View {
-        NavigationStack {
-            List {
+        List {
+            Section {
                 ForEach(allSeries) { series in
-                    Button {
-                        showingEditSeries = series
-                    } label: {
-                        HStack {
-                            Circle()
-                                .fill(SeriesManager.shared.colorFromHex(series.color))
-                                .frame(width: 20, height: 20)
-
-                            VStack(alignment: .leading) {
-                                HStack {
-                                    Text(series.name)
-                                        .foregroundColor(.primary)
-                                    if series.isDefault {
-                                        Text("DEFAULT")
-                                            .font(.caption2)
-                                            .fontWeight(.semibold)
-                                            .padding(.horizontal, 6)
-                                            .padding(.vertical, 2)
-                                            .background(Color.blue.opacity(0.2))
-                                            .foregroundColor(.blue)
-                                            .cornerRadius(4)
-                                    }
-                                }
-                                if let snapshots = series.snapshots,
-                                   let latestSnapshot = snapshots.sorted(by: { $0.date > $1.date }).first {
-                                    Text(latestSnapshot.value.formatted(.currency(code: Locale.current.currency?.identifier ?? "EUR")))
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                }
-                                Text("\(series.snapshots?.count ?? 0) entries")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(.secondary)
+                    SeriesRowView(series: series)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            showingEditSeries = series
                         }
-                    }
+                    #if os(iOS)
                     .swipeActions {
                         if !series.isDefault {
                             Button(role: .destructive) {
@@ -70,150 +39,94 @@ struct SeriesManagementView: View {
                             }
                         }
                     }
-                }
-            }
-            .navigationTitle("Series")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Done") {
-                        dismiss()
+                    #else
+                    .contextMenu {
+                        if !series.isDefault {
+                            Button(role: .destructive) {
+                                showingDeleteConfirmation = series
+                                deleteConfirmationText = ""
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
                     }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        showingAddSeries = true
-                    } label: {
-                        Image(systemName: "plus")
-                    }
-                    .disabled(allSeries.count >= 10)
-                }
-            }
-            .sheet(isPresented: $showingAddSeries) {
-                EditSeriesView(series: nil)
-            }
-            .sheet(item: $showingEditSeries) { series in
-                EditSeriesView(series: series)
-            }
-            .alert("Delete \"\(showingDeleteConfirmation?.name ?? "")\"?", isPresented: .constant(showingDeleteConfirmation != nil)) {
-                TextField("Enter series name to confirm", text: $deleteConfirmationText)
-                Button("Cancel", role: .cancel) {
-                    showingDeleteConfirmation = nil
-                    deleteConfirmationText = ""
-                }
-                Button("Delete", role: .destructive) {
-                    if let series = showingDeleteConfirmation,
-                       deleteConfirmationText == series.name,
-                       !series.isDefault {
-                        modelContext.delete(series)
-                        showingDeleteConfirmation = nil
-                        deleteConfirmationText = ""
-                        try? modelContext.save()
-                    }
-                }
-                .disabled(deleteConfirmationText != showingDeleteConfirmation?.name || showingDeleteConfirmation?.isDefault == true)
-            } message: {
-                if let series = showingDeleteConfirmation {
-                    Text("This will delete \(series.snapshots?.count ?? 0) entries. This action cannot be undone.\n\nTo confirm, enter the series name:")
+                    #endif
                 }
             }
         }
-    }
-}
-
-struct EditSeriesView: View {
-    @Environment(\.dismiss) var dismiss
-    @Environment(\.modelContext) var modelContext
-    @Query(sort: \Series.sortOrder) var allSeries: [Series]
-
-    let series: Series?
-
-    @State private var name: String = ""
-    @State private var selectedColor: String = SeriesManager.predefinedColors[0]
-    @State private var isDefault: Bool = false
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section("Name") {
-                    TextField("Series name", text: $name)
-                }
-
-                Section("Color") {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 44))], spacing: 12) {
-                        ForEach(SeriesManager.predefinedColors, id: \.self) { color in
-                            Button {
-                                selectedColor = color
-                            } label: {
-                                ZStack {
-                                    Circle()
-                                        .fill(SeriesManager.shared.colorFromHex(color))
-                                        .frame(width: 44, height: 44)
-
-                                    if selectedColor == color {
-                                        Image(systemName: "checkmark")
-                                            .foregroundColor(.white)
-                                            .fontWeight(.bold)
-                                    }
-                                }
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .padding(.vertical, 8)
-                }
-
-                Section {
-                    Toggle("Set as default series", isOn: $isDefault)
-                } footer: {
-                    Text("The default series is used for new entries and cannot be deleted.")
-                        .font(.caption)
+        #if os(macOS)
+        .listStyle(.inset)
+        .scrollContentBackground(.visible)
+        #else
+        .listStyle(.inset)
+        #endif
+        .navigationTitle("Series")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .toolbar {
+            #if os(iOS)
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("Done") {
+                    dismiss()
                 }
             }
-            .navigationTitle(series == nil ? "Add Series" : "Edit Series")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    showingAddSeries = true
+                } label: {
+                    Image(systemName: "plus")
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        if let series = series {
-                            series.name = name
-                            series.color = selectedColor
-
-                            // Handle default series change
-                            if isDefault && !series.isDefault {
-                                SeriesManager.shared.setDefaultSeries(series, allSeries: allSeries, context: modelContext)
-                            }
-                        } else {
-                            let newSeries = Series(
-                                name: name,
-                                color: selectedColor,
-                                sortOrder: allSeries.count,
-                                isDefault: isDefault
-                            )
-                            modelContext.insert(newSeries)
-
-                            // If this is marked as default, ensure no other series is default
-                            if isDefault {
-                                SeriesManager.shared.setDefaultSeries(newSeries, allSeries: allSeries + [newSeries], context: modelContext)
-                            }
-                        }
-                        try? modelContext.save()
-                        dismiss()
-                    }
-                    .disabled(name.isEmpty)
+                .disabled(allSeries.count >= 10)
+            }
+            #else
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Done") {
+                    dismiss()
                 }
             }
-            .onAppear {
-                if let series = series {
-                    name = series.name
-                    selectedColor = series.color
-                    isDefault = series.isDefault
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showingAddSeries = true
+                } label: {
+                    Label("Add Series", systemImage: "plus")
                 }
+                .disabled(allSeries.count >= 10)
+            }
+            #endif
+        }
+        .sheet(isPresented: $showingAddSeries) {
+            EditSeriesView(series: nil)
+            #if os(macOS)
+            .presentationSizing(.form)
+            #endif
+        }
+        .sheet(item: $showingEditSeries) { series in
+            EditSeriesView(series: series)
+            #if os(macOS)
+            .presentationSizing(.form)
+            #endif
+        }
+        .alert("Delete \"\(showingDeleteConfirmation?.name ?? "")\"?", isPresented: .constant(showingDeleteConfirmation != nil)) {
+            TextField("Enter series name to confirm", text: $deleteConfirmationText)
+            Button("Cancel", role: .cancel) {
+                showingDeleteConfirmation = nil
+                deleteConfirmationText = ""
+            }
+            Button("Delete", role: .destructive) {
+                if let series = showingDeleteConfirmation,
+                   deleteConfirmationText == series.name,
+                   !series.isDefault {
+                    modelContext.delete(series)
+                    showingDeleteConfirmation = nil
+                    deleteConfirmationText = ""
+                    try? modelContext.save()
+                }
+            }
+            .disabled(deleteConfirmationText != showingDeleteConfirmation?.name || showingDeleteConfirmation?.isDefault == true)
+        } message: {
+            if let series = showingDeleteConfirmation {
+                Text("This will delete \(series.snapshots?.count ?? 0) entries. This action cannot be undone.\n\nTo confirm, enter the series name:")
             }
         }
     }

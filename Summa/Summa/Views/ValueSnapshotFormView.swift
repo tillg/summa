@@ -21,37 +21,44 @@ struct ValueSnapshotFormView: View {
     @State private var selectedSeries: Series?
 
     var body: some View {
-            NavigationStack {
-                Form {
-                    Section("Series") {
-                        if !allSeries.isEmpty {
-                            Picker("Series", selection: $selectedSeries) {
-                                ForEach(allSeries) { series in
-                                    HStack {
-                                        Circle()
-                                            .fill(SeriesManager.shared.colorFromHex(series.color))
-                                            .frame(width: 12, height: 12)
-                                        Text(series.name)
-                                    }
-                                    .tag(series as Series?)
-                                }
+        Form {
+            Section("Series") {
+                if !allSeries.isEmpty {
+                    Picker("Series", selection: $selectedSeries) {
+                        ForEach(allSeries) { series in
+                            HStack {
+                                Circle()
+                                    .fill(SeriesManager.shared.colorFromHex(series.color))
+                                    .frame(width: 12, height: 12)
+                                Text(series.name)
                             }
-                        } else {
-                            Text("No series available")
-                                .foregroundColor(.secondary)
+                            .tag(series as Series?)
                         }
                     }
+                } else {
+                    Text("No series available")
+                        .foregroundColor(.secondary)
+                }
+            }
 
-                    Section("Details") {
+            Section("Details") {
                         TextField("Value", value: $value, format: .currency(code: Locale.current.currency?.identifier ?? "EUR"))
+                            #if os(iOS)
                             .keyboardType(.decimalPad)
+                            #endif
 
                         DatePicker("Date", selection: $date)
                     }
                 }
                 .navigationTitle(snapshot == nil ? "Add Entry" : "Edit Entry")
+                #if os(macOS)
+                .padding()
+                #endif
+                #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
+                #endif
                 .toolbar {
+                    #if os(iOS)
                     ToolbarItem(placement: .navigationBarLeading) {
                         Button("Cancel") {
                             dismiss()
@@ -84,6 +91,40 @@ struct ValueSnapshotFormView: View {
                         }
                         .disabled(selectedSeries == nil)
                     }
+                    #else
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") {
+                            dismiss()
+                        }
+                    }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Save") {
+                            if let snapshot = snapshot {
+                                // Edit existing snapshot
+                                snapshot.date = date
+                                snapshot.value = value
+                                snapshot.series = selectedSeries
+                            } else {
+                                // Create new snapshot
+                                let valueSnapshot = ValueSnapshot(
+                                    on: date,
+                                    value: value,
+                                    series: selectedSeries
+                                )
+                                modelContext.insert(valueSnapshot)
+                            }
+
+                            // Remember last used series
+                            if let selectedSeries = selectedSeries {
+                                SeriesManager.shared.setLastUsedSeries(selectedSeries)
+                            }
+
+                            try? modelContext.save()
+                            dismiss()
+                        }
+                        .disabled(selectedSeries == nil)
+                    }
+                    #endif
                 }
                 .onAppear {
                     if let snapshot = snapshot {
@@ -98,7 +139,13 @@ struct ValueSnapshotFormView: View {
                         }
                     }
                 }
-        }
     }
+}
+
+#Preview {
+    NavigationStack {
+        ValueSnapshotFormView(snapshot: nil)
+    }
+    .modelContainer(for: [ValueSnapshot.self, Series.self])
 }
     

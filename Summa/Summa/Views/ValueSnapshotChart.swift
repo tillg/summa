@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import SwiftData
 import Charts
 
 
@@ -19,6 +20,7 @@ struct ValueSnapshotChart: View {
     var valueHistory: [ValueSnapshot]
     var allSeries: [Series]
     @Binding var visibleSeriesIDs: Set<UUID>
+    var horizontalSizeClass: UserInterfaceSizeClass?
 
     @State private var selectedPeriod: Date = Calendar.current.date(byAdding: .day, value: -7, to: Date.now) ?? Date.now
 
@@ -53,7 +55,8 @@ struct ValueSnapshotChart: View {
                 if valuesToDraw.isEmpty {
                     Text("No data for selected period")
                         .foregroundColor(.secondary)
-                        .frame(height: 200)
+                        .frame(height: horizontalSizeClass == .compact ? 200 : nil)
+                        .frame(maxHeight: horizontalSizeClass == .regular ? .infinity : nil)
                 } else {
                     Chart {
                         ForEach(allSeries.filter { series in
@@ -72,7 +75,9 @@ struct ValueSnapshotChart: View {
                         }
                     }
                     .chartYScale(domain: [minValueToDraw, maxValueToDraw])
-                    .frame(height: 200)
+                    // Adaptive height: compact = fixed 200pt, regular = fill available space
+                    .frame(height: horizontalSizeClass == .compact ? 200 : nil)
+                    .frame(maxHeight: horizontalSizeClass == .regular ? .infinity : nil)
                 }
             }
 
@@ -117,7 +122,11 @@ struct ValueSnapshotChart: View {
                                     .padding(.vertical, 6)
                                     .background(
                                         RoundedRectangle(cornerRadius: 12)
+                                            #if os(iOS)
                                             .fill(Color(uiColor: .systemGray6))
+                                            #else
+                                            .fill(Color(nsColor: .systemGray).opacity(0.2))
+                                            #endif
                                             .opacity(visibleSeriesIDs.contains(series.id) ? 1.0 : 0.5)
                                     )
                                 }
@@ -131,4 +140,15 @@ struct ValueSnapshotChart: View {
             }
         }
     }
+}
+
+#Preview {
+    ValueSnapshotChart(
+        valueHistory: [],
+        allSeries: [],
+        visibleSeriesIDs: .constant(Set<UUID>()),
+        horizontalSizeClass: .regular
+    )
+    .modelContainer(for: [ValueSnapshot.self, Series.self])
+    .padding()
 }
