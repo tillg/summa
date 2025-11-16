@@ -194,7 +194,6 @@ struct ContentView: View {
             }
             .padding(.horizontal)
             .padding(.vertical, 12)
-            .background(Color(UIColor.systemBackground))
 
             Divider()
 
