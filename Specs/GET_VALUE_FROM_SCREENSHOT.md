@@ -2,9 +2,103 @@
 
 ## Overview
 
-Enable users to add value snapshots by importing screenshots (e.g., from banking apps) and automatically extracting the monetary value using on-device OCR.
+Enable users to add value snapshots by importing screenshots (e.g., from banking apps), initially with manual value entry and later with automatic extraction using on-device OCR.
 
-## User Flow
+## Implementation Approach
+
+This feature will be implemented in two distinct phases:
+
+### Phase 1: Screenshot Storage with Manual Entry
+Store screenshots alongside value snapshots for reference, with users manually entering the values. This provides immediate value by creating a visual record without the complexity of OCR.
+
+### Phase 2: Automated Value Extraction
+Add OCR capabilities to automatically extract monetary values from stored screenshots, reducing manual data entry.
+
+## Phase 1: Screenshot Storage (Immediate Implementation)
+
+### User Flow
+
+1. User opens Add Value form
+2. User can optionally attach a screenshot via:
+   - Photo library picker
+   - Camera capture (if available)
+3. User manually enters the value and other details as normal
+4. Screenshot is stored with the ValueSnapshot for reference
+5. User can view stored screenshots when reviewing value history
+
+### Data Model Changes
+
+Add to `ValueSnapshot` model:
+
+```swift
+// Image storage
+@Attribute(.externalStorage) var sourceImage: Data?  // Original screenshot
+var imageAttachedDate: Date?  // When image was added
+```
+
+### UI Changes
+
+#### AddValueSnapshotView
+- Add "Attach Screenshot" button below the value input field
+- Show thumbnail preview of attached image
+- Allow removing attached image before saving
+- Camera/Photo Library picker options
+
+#### ContentView / Value History List
+- Show image indicator icon for snapshots with attached screenshots
+- Tap to view full-size screenshot in modal/sheet
+
+### Technical Implementation
+
+```swift
+import SwiftUI
+import PhotosUI
+
+// Image handling in AddValueSnapshotView
+@State private var selectedImage: UIImage?
+@State private var showingImagePicker = false
+@State private var imagePickerSourceType: UIImagePickerController.SourceType = .photoLibrary
+
+// Convert UIImage to Data for storage
+if let image = selectedImage,
+   let imageData = image.jpegData(compressionQuality: 0.8) {
+    newSnapshot.sourceImage = imageData
+    newSnapshot.imageAttachedDate = Date()
+}
+
+// Display thumbnail in form
+if let imageData = newSnapshot.sourceImage,
+   let uiImage = UIImage(data: imageData) {
+    Image(uiImage: uiImage)
+        .resizable()
+        .scaledToFit()
+        .frame(height: 100)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+}
+```
+
+### Implementation Checklist for Phase 1
+
+- [ ] Update ValueSnapshot model with image fields
+- [ ] Add PhotosUI import and permissions
+- [ ] Create ImagePicker component (UIViewControllerRepresentable)
+- [ ] Add "Attach Screenshot" button to AddValueSnapshotView
+- [ ] Implement image preview in form
+- [ ] Add image indicator to value history list items
+- [ ] Create full-screen image viewer for history items
+- [ ] Test with various image sizes and formats
+- [ ] Verify CloudKit sync works with attached images
+
+### Benefits of Phase 1
+- Immediate visual record keeping
+- Proof/reference for entered values
+- No complex OCR implementation needed
+- Foundation for Phase 2
+- Users can start building a library of screenshots
+
+## Phase 2: Automated OCR Extraction (Future Enhancement)
+
+### User Flow
 
 1. User takes/imports a screenshot containing financial information
 2. App creates a new ValueSnapshot with the image
@@ -15,19 +109,20 @@ Enable users to add value snapshots by importing screenshots (e.g., from banking
 4. User confirms/corrects extracted values
 5. ValueSnapshot is saved with confirmed data
 
-## Data Model Changes
+### Data Model Changes
 
-### ValueSnapshot Extensions
-
-Add the following fields to the `ValueSnapshot` model:
+Extend the `ValueSnapshot` model with OCR-related fields:
 
 ```swift
-// Image storage
-@Attribute(.externalStorage) var sourceImage: Data?  // Original screenshot
+// Phase 1 fields (already added)
+@Attribute(.externalStorage) var sourceImage: Data?
+var imageAttachedDate: Date?
 
-// Processing state
+// Phase 2: Additional OCR fields
 var imageProcessingState: ImageProcessingState = .none
 var valuesConfirmed: Bool = true  // false when OCR-extracted, true after user confirmation
+var ocrConfidence: Double?  // 0.0 to 1.0
+var extractedText: String?  // Full OCR text for reference
 
 enum ImageProcessingState: String, Codable {
     case none        // No image attached
@@ -36,16 +131,6 @@ enum ImageProcessingState: String, Codable {
     case processed   // Processing complete
     case failed      // Processing failed
 }
-```
-
-### Processing Metadata
-
-Consider storing OCR confidence and extraction metadata:
-
-```swift
-// OCR metadata (optional, for debugging/improvement)
-var ocrConfidence: Double?  // 0.0 to 1.0
-var extractedText: String?  // Full OCR text for reference
 ```
 
 ## Technical Implementation
@@ -207,43 +292,41 @@ Return only the numeric value.
 let response = try await session.respond(to: prompt)
 ```
 
-## Implementation Phases
+### UI Changes for Phase 2
 
-### Phase 1: Basic OCR (MVP)
-1. Add image field to ValueSnapshot model
-2. Implement Vision framework OCR
-3. Basic regex-based value extraction
-4. Manual series selection
-5. User confirmation UI
-
-### Phase 2: Enhanced Recognition
-1. Improved parsing with context clues
-2. Date extraction from screenshots
-3. Automatic series suggestion
-4. Confidence indicators in UI
-
-### Phase 3: Advanced Features (Future)
-1. Foundation Models integration (iOS 18+)
-2. Multi-value extraction (multiple accounts)
-3. Receipt/invoice itemization
-4. Historical pattern learning
-
-## UI/UX Considerations
-
-1. **Image Import**
-   - Photo library picker
-   - Drag & drop support (iPad)
-   - Live camera capture (future)
+1. **OCR Processing Flow**
+   - Show processing indicator while analyzing image
+   - Display extracted value with confidence indicator
+   - Allow manual correction of extracted value
+   - Highlight extracted text regions on image preview
 
 2. **Confirmation Interface**
-   - Show extracted values with edit capability
-   - Highlight low-confidence extractions
-   - Series picker with smart suggestion
+   - Pre-fill value field with extracted amount
+   - Show confidence score (e.g., "95% confident")
+   - Mark as "needs confirmation" if confidence < 90%
+   - Allow toggling between OCR and manual entry modes
 
-3. **Error Handling**
-   - Clear messaging for failed extractions
-   - Allow manual entry as fallback
-   - Retry processing option
+## Implementation Timeline
+
+### Phase 1 Deliverables (Immediate)
+
+- Add screenshot attachment to ValueSnapshot model
+- Update AddValueSnapshotView with image picker
+- Store images with SwiftData external storage
+- Display image indicators in value history
+- View full screenshots from history list
+- Manual value entry (no changes to current flow)
+
+### Phase 2 Deliverables (Future)
+
+- Integrate Vision framework for OCR
+- Implement value extraction algorithms
+- Add confirmation/correction UI
+- Store OCR metadata and confidence scores
+- Auto-populate value field from screenshots
+- Smart series detection based on text
+
+## Additional Considerations
 
 ## Privacy & Security
 
