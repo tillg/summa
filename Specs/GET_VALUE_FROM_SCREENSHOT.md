@@ -11,7 +11,10 @@ This feature will be implemented in two distinct phases:
 ### Phase 1: Screenshot Storage with Manual Entry
 Store screenshots alongside value snapshots for reference, with users manually entering the values. This provides immediate value by creating a visual record without the complexity of OCR.
 
-### Phase 2: Automated Value Extraction
+### Phase 2: Share Sheet Integration for Quick Capture
+Enable users to share screenshots directly to Summa from any app (Photos, banking apps, etc.) to create placeholder ValueSnapshots that can be processed later. This provides a quick capture workflow without interrupting the user's current task.
+
+### Phase 3: Automated Value Extraction
 Add OCR capabilities to automatically extract monetary values from stored screenshots, reducing manual data entry.
 
 ## Phase 1: Screenshot Storage (Immediate Implementation)
@@ -96,7 +99,310 @@ if let imageData = newSnapshot.sourceImage,
 - Foundation for Phase 2
 - Users can start building a library of screenshots
 
-## Phase 2: Automated OCR Extraction (Future Enhancement)
+## Phase 2: Share Sheet Integration (Next Implementation)
+
+### Overview
+
+Enable users to share images directly to Summa from other apps via iOS Share Sheet. When a user shares an image to Summa, the app creates a "pending" ValueSnapshot with the image attached but no value entered yet. The user can then review and complete these pending snapshots later in a dedicated workflow.
+
+### User Flow
+
+#### Quick Capture Flow
+1. User views a screenshot in Photos app or takes screenshot in banking app
+2. User taps Share button and selects "Summa" from Share Sheet
+3. Summa receives the image and creates a pending ValueSnapshot in the background
+4. User sees brief confirmation (optional: toast/notification)
+5. User can continue with current task - no interruption
+
+#### Review & Complete Flow
+1. User opens Summa app
+2. The Snapshots with just a picture are listed in the same list as the others but have a gray background and a small question mark symbol that indicates they are "pending" as state.
+3. User taps a pending snapshot to complete it:
+   - View full-size image
+   - Select series
+   - Enter value (manually or via OCR in Phase 3)
+   - Edit date if needed
+   - Add notes
+   - Save or delete
+
+### Data Model Changes
+
+Extend the `ValueSnapshot` model to support pending state:
+
+```swift
+// Add to existing ValueSnapshot model
+
+// Processing state for share sheet workflow
+var processingState: ProcessingState = .completed
+
+enum ProcessingState: String, Codable {
+    case pending     // Image received via share sheet, needs user input
+    case completed   // Fully populated snapshot (normal state)
+}
+
+// Make value optional to support pending state
+// Change from: var value: Decimal
+var value: Decimal?  // nil when in pending state
+
+// CloudKit compatibility: already optional in current implementation
+```
+
+**Migration Notes:**
+- Existing snapshots will have `processingState = .completed` by default
+- Existing snapshots will have non-nil values (already entered)
+- No data migration needed for Phase 1 → Phase 2
+
+### Technical Implementation
+
+#### 1. Share Extension Target
+
+Create an iOS Share Extension to receive shared images:
+
+**Setup Steps:**
+1. Add new target in Xcode: File > New > Target > Share Extension
+2. Name: "Summa Share Extension"
+3. Enable App Groups for data sharing between main app and extension
+4. Configure Info.plist to accept images only
+
+**App Groups Configuration:**
+```xml
+<!-- Add to main app and share extension -->
+<key>com.apple.security.application-groups</key>
+<array>
+    <string>group.com.yourcompany.summa</string>
+</array>
+```
+
+**ShareViewController.swift:**
+```swift
+import UIKit
+import Social
+import UniformTypeIdentifiers
+import SwiftData
+
+class ShareViewController: UIViewController {
+
+    // Access shared SwiftData container via App Group
+    lazy var modelContainer: ModelContainer = {
+        let storeURL = FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: "group.com.yourcompany.summa")!
+            .appending(path: "Summa.sqlite")
+
+        let config = ModelConfiguration(url: storeURL)
+        return try! ModelContainer(
+            for: ValueSnapshot.self, Series.self,
+            configurations: config
+        )
+    }()
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        processSharedImage()
+    }
+
+    private func processSharedImage() {
+        guard let extensionItem = extensionContext?.inputItems.first as? NSExtensionItem,
+              let itemProvider = extensionItem.attachments?.first else {
+            completeRequest(success: false)
+            return
+        }
+
+        // Check if it's an image
+        if itemProvider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
+            itemProvider.loadItem(forTypeIdentifier: UTType.image.identifier) { [weak self] (item, error) in
+                guard let self = self else { return }
+
+                if let error = error {
+                    print("Error loading image: \(error)")
+                    self.completeRequest(success: false)
+                    return
+                }
+
+                // Get image data
+                var imageData: Data?
+
+                if let url = item as? URL {
+                    imageData = try? Data(contentsOf: url)
+                } else if let image = item as? UIImage {
+                    imageData = image.jpegData(compressionQuality: 0.8)
+                } else if let data = item as? Data {
+                    imageData = data
+                }
+
+                guard let imageData = imageData else {
+                    self.completeRequest(success: false)
+                    return
+                }
+
+                // Create pending snapshot
+                self.createPendingSnapshot(with: imageData)
+            }
+        } else {
+            completeRequest(success: false)
+        }
+    }
+
+    private func createPendingSnapshot(with imageData: Data) {
+        let context = modelContainer.mainContext
+
+        // Create new pending snapshot
+        let snapshot = ValueSnapshot(
+            value: nil,  // No value yet
+            date: Date(),
+            notes: nil,
+            series: nil
+        )
+        snapshot.sourceImage = imageData
+        snapshot.imageAttachedDate = Date()
+        snapshot.processingState = .pending
+
+        context.insert(snapshot)
+
+        do {
+            try context.save()
+            completeRequest(success: true)
+        } catch {
+            print("Error saving snapshot: \(error)")
+            completeRequest(success: false)
+        }
+    }
+
+    private func completeRequest(success: Bool) {
+        if success {
+            // Optional: Show brief success message
+            let alert = UIAlertController(
+                title: "Saved to Summa",
+                message: "Screenshot ready to process",
+                preferredStyle: .alert
+            )
+            present(alert, animated: true) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    self.extensionContext?.completeRequest(returningItems: nil)
+                }
+            }
+        } else {
+            extensionContext?.cancelRequest(withError: NSError(domain: "SummaShare", code: -1))
+        }
+    }
+}
+```
+
+**Info.plist Configuration for Share Extension:**
+```xml
+<key>NSExtension</key>
+<dict>
+    <key>NSExtensionAttributes</key>
+    <dict>
+        <key>NSExtensionActivationRule</key>
+        <dict>
+            <key>NSExtensionActivationSupportsImageWithMaxCount</key>
+            <integer>1</integer>
+        </dict>
+    </dict>
+    <key>NSExtensionPointIdentifier</key>
+    <string>com.apple.share-services</string>
+    <key>NSExtensionPrincipalClass</key>
+    <string>ShareViewController</string>
+</dict>
+```
+
+#### 2. Modified Snapshots View
+
+The SnapshotEditView and the Row in the list of ValueSnaphots need to be adapted to reflect the processingState.
+The list Entry View should be extracted in their own file and be renamed to SnapshotListEntryView.
+
+#### 3. Main App Integration
+
+Update `ContentView` to show pending snapshots indicator:
+
+```swift
+// Add to ContentView
+@Query(filter: #Predicate<ValueSnapshot> { $0.processingState == .pending })
+private var pendingSnapshots: [ValueSnapshot]
+
+@State private var showingPendingSnapshots = false
+
+// Add to toolbar
+.toolbar {
+    ToolbarItem(placement: .navigationBarLeading) {
+        Button {
+            showingPendingSnapshots = true
+        } label: {
+            Label("Pending", systemImage: "tray")
+                .badge(pendingSnapshots.count)
+        }
+        .disabled(pendingSnapshots.isEmpty)
+    }
+}
+.sheet(isPresented: $showingPendingSnapshots) {
+    PendingSnapshotsView()
+}
+```
+
+### Implementation Checklist for Phase 2
+
+- [ ] Enable App Groups in Xcode for main app
+- [ ] Create Share Extension target
+- [ ] Enable App Groups in Share Extension
+- [ ] Configure SwiftData to use shared container (App Group)
+- [ ] Add `processingState` field to ValueSnapshot model
+- [ ] Make `value` field optional in ValueSnapshot
+- [ ] Implement ShareViewController to handle shared images
+- [ ] Configure Share Extension Info.plist (accept images only)
+- [ ] Create PendingSnapshotsView
+- [ ] Create PendingSnapshotRow component
+- [ ] Create CompletePendingSnapshotView
+- [ ] Add pending snapshots indicator to ContentView
+- [ ] Test sharing from Photos app
+- [ ] Test sharing from other apps (Safari, banking apps)
+- [ ] Verify CloudKit sync works with pending snapshots
+- [ ] Test completing pending snapshots
+- [ ] Test deleting pending snapshots
+
+### Benefits of Phase 2
+
+- **Frictionless capture**: Add screenshots instantly without interrupting workflow
+- **Batch processing**: Collect multiple screenshots and process them later when convenient
+- **System integration**: Works with iOS Share Sheet from any app
+- **Offline-first**: Screenshots saved locally, processed at user's convenience
+- **Foundation for Phase 3**: Pending snapshots provide perfect entry point for automatic OCR processing
+
+### Design Considerations
+
+#### Badge Visibility
+Show pending snapshot count in multiple places:
+- Tab bar badge (if using tab navigation)
+- Toolbar button badge
+- Home screen app badge (optional, via notifications)
+
+#### Background Processing
+- Share extension runs in limited memory/time
+- Keep processing minimal: just save image and basic metadata
+- Heavy lifting (OCR, parsing) happens in main app
+
+#### Error Handling
+- Handle missing App Group configuration gracefully
+- Provide clear error messages if share fails
+- Allow retry mechanism in extension
+
+#### User Experience
+- Optional: Show quick toast notification after share
+- Clear visual distinction between pending and completed snapshots
+- Easy batch operations (complete all, delete all)
+
+### Connection to Phase 3
+
+Phase 2 creates the perfect foundation for Phase 3 (OCR):
+- **Pending snapshots** become the queue for automatic processing
+- When OCR is implemented, the flow becomes:
+  1. User shares screenshot → pending snapshot created
+  2. Main app automatically processes pending snapshots with OCR
+  3. User reviews pre-filled values and confirms/corrects
+  4. Snapshot marked as completed
+
+This means Phase 2's UI and data model will require minimal changes when OCR is added in Phase 3.
+
+## Phase 3: Automated OCR Extraction (Future Enhancement)
 
 ### User Flow
 
@@ -308,7 +614,7 @@ let response = try await session.respond(to: prompt)
 
 ## Implementation Timeline
 
-### Phase 1 Deliverables (Immediate)
+### Phase 1 Deliverables (Completed ✓)
 
 - Add screenshot attachment to ValueSnapshot model
 - Update AddValueSnapshotView with image picker
@@ -317,14 +623,28 @@ let response = try await session.respond(to: prompt)
 - View full screenshots from history list
 - Manual value entry (no changes to current flow)
 
-### Phase 2 Deliverables (Future)
+### Phase 2 Deliverables (Next)
+
+- Configure App Groups for data sharing
+- Create Share Extension target
+- Implement ShareViewController for receiving shared images
+- Add `processingState` field to ValueSnapshot model
+- Make `value` field optional
+- Create PendingSnapshotsView UI
+- Create CompletePendingSnapshotView UI
+- Add pending snapshots indicator to main app
+- Test share sheet integration across apps
+
+### Phase 3 Deliverables (Future)
 
 - Integrate Vision framework for OCR
 - Implement value extraction algorithms
-- Add confirmation/correction UI
+- Add automatic processing for pending snapshots
+- Add confirmation/correction UI for OCR results
 - Store OCR metadata and confidence scores
 - Auto-populate value field from screenshots
 - Smart series detection based on text
+- Optional: Advanced parsing with Foundation Models (iOS 18+)
 
 ## Additional Considerations
 
