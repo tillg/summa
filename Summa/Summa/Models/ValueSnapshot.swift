@@ -14,6 +14,9 @@ class ValueSnapshot: Identifiable, Equatable, Hashable {
     var date: Date = Date.now
     var value: Double = 0.0
     var series: Series?
+    
+    @Attribute(.externalStorage) var sourceImage: Data?  // Original screenshot stored externally
+    var imageAttachedDate: Date?  // When image was added
 
     init(on: Date, value: Double, series: Series? = nil) {
         self.id = UUID()

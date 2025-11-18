@@ -96,13 +96,13 @@ struct SeriesManagementView: View {
             #endif
         }
         .sheet(isPresented: $showingAddSeries) {
-            EditSeriesView(series: nil)
+            SeriesEditView(series: nil)
             #if os(macOS)
             .presentationSizing(.form)
             #endif
         }
         .sheet(item: $showingEditSeries) { series in
-            EditSeriesView(series: series)
+            SeriesEditView(series: series)
             #if os(macOS)
             .presentationSizing(.form)
             #endif

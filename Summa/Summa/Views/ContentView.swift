@@ -68,7 +68,7 @@ struct ContentView: View {
             #endif
             .sheet(isPresented: $showingAddValueSnapshot) {
                 NavigationStack {
-                    ValueSnapshotFormView(snapshot: nil)
+                    ValueSnapshotEditView(snapshot: nil)
                         .environment(\.modelContext, modelContext)
                 }
                 #if os(macOS)
@@ -77,7 +77,7 @@ struct ContentView: View {
             }
             .sheet(item: $editingSnapshot) { snapshot in
                 NavigationStack {
-                    ValueSnapshotFormView(snapshot: snapshot)
+                    ValueSnapshotEditView(snapshot: snapshot)
                         .environment(\.modelContext, modelContext)
                 }
                 #if os(macOS)

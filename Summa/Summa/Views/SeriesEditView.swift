@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 /// View for adding or editing a series
-struct EditSeriesView: View {
+struct SeriesEditView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) var modelContext
     @Query(sort: \Series.sortOrder) var allSeries: [Series]
@@ -186,7 +186,7 @@ struct EditSeriesView: View {
 
 #Preview {
     NavigationStack {
-        EditSeriesView(series: nil)
+        SeriesEditView(series: nil)
     }
     .modelContainer(for: [ValueSnapshot.self, Series.self])
 }
