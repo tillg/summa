@@ -63,36 +63,54 @@ class CloudKitSyncMonitor {
 
     @MainActor
     private func handleEvent(_ event: NSPersistentCloudKitContainer.Event) {
+        #if DEBUG
+        let statusText = event.succeeded ? "succeeded" : "failed"
+        #endif
+
         switch event.type {
         case .setup:
-            print("☁️ CloudKit: Setup event - \(event.succeeded ? "succeeded" : "failed")")
+            #if DEBUG
+            print("☁️ CloudKit: Setup event - \(statusText)")
+            #endif
             if !event.succeeded {
                 lastError = event.error
             }
 
         case .import:
-            print("☁️ CloudKit: Import event - \(event.succeeded ? "succeeded" : "failed")")
+            #if DEBUG
+            print("☁️ CloudKit: Import event - \(statusText)")
+            #endif
             if event.succeeded {
                 // Initial import completed successfully
                 if syncState != .synced {
+                    #if DEBUG
                     print("✅ CloudKit: Initial sync completed")
+                    #endif
                     syncState = .synced
                     hasCompletedInitialSync = true
                 }
             } else {
                 // Import failed
+                #if DEBUG
                 print("❌ CloudKit: Import failed - \(event.error?.localizedDescription ?? "unknown error")")
+                #endif
                 lastError = event.error
             }
 
         case .export:
-            print("☁️ CloudKit: Export event - \(event.succeeded ? "succeeded" : "failed")")
+            #if DEBUG
+            print("☁️ CloudKit: Export event - \(statusText)")
+            #endif
             if !event.succeeded {
+                #if DEBUG
                 print("⚠️ CloudKit: Export failed - \(event.error?.localizedDescription ?? "unknown error")")
+                #endif
             }
 
         @unknown default:
+            #if DEBUG
             print("☁️ CloudKit: Unknown event type")
+            #endif
         }
 
         // If we're not synced yet and haven't seen any errors, we're syncing

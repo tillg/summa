@@ -35,6 +35,66 @@ struct ValueSnapshotEditView: View {
     // Delete confirmation
     @State private var showingDeleteConfirmation = false
 
+    // Error handling
+    @State private var saveError: Error?
+
+    private func performSave() {
+        if let snapshot = snapshot {
+            // Edit existing snapshot
+            snapshot.date = date
+            snapshot.value = value
+            snapshot.series = selectedSeries
+
+            // Mark as completed if it was pending
+            if snapshot.state == .pending {
+                snapshot.state = .completed
+            }
+
+            // Handle image update
+            if let selectedImage = selectedImage,
+               let imageData = selectedImage.compressedJPEGData(maxSizeKB: AppConstants.Image.maxCompressedSizeKB) {
+                snapshot.sourceImage = imageData
+                snapshot.imageAttachedDate = Date()
+            } else if existingImageData == nil && selectedImage == nil {
+                // User removed the image
+                snapshot.sourceImage = nil
+                snapshot.imageAttachedDate = nil
+            }
+        } else {
+            // Create new snapshot
+            let valueSnapshot = ValueSnapshot(
+                on: date,
+                value: value,
+                series: selectedSeries,
+                processingState: .completed
+            )
+
+            // Add image if selected
+            if let selectedImage = selectedImage,
+               let imageData = selectedImage.compressedJPEGData(maxSizeKB: AppConstants.Image.maxCompressedSizeKB) {
+                valueSnapshot.sourceImage = imageData
+                valueSnapshot.imageAttachedDate = Date()
+            }
+
+            modelContext.insert(valueSnapshot)
+        }
+
+        // Remember last used series
+        if let selectedSeries = selectedSeries {
+            SeriesManager.shared.setLastUsedSeries(selectedSeries)
+        }
+
+        // Save changes
+        let operation = snapshot == nil ? "Create entry" : "Update entry"
+        let result = SaveErrorHandler.save(modelContext, operation: operation)
+        if case .failure(let error) = result {
+            saveError = error
+            return
+        }
+
+        dismiss()
+    }
+
     var body: some View {
         Form {
             Section("Series") {
@@ -44,7 +104,7 @@ struct ValueSnapshotEditView: View {
                             HStack {
                                 Circle()
                                     .fill(SeriesManager.shared.colorFromHex(series.color))
-                                    .frame(width: 12, height: 12)
+                                    .frame(width: AppConstants.UI.seriesIndicatorSize, height: AppConstants.UI.seriesIndicatorSize)
                                 Text(series.name)
                             }
                             .tag(series as Series?)
@@ -228,53 +288,7 @@ struct ValueSnapshotEditView: View {
                     }
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button("Save") {
-                            if let snapshot = snapshot {
-                                // Edit existing snapshot
-                                snapshot.date = date
-                                snapshot.value = value
-                                snapshot.series = selectedSeries
-
-                                // Mark as completed if it was pending
-                                if snapshot.state == .pending {
-                                    snapshot.state = .completed
-                                }
-
-                                // Handle image update
-                                if let selectedImage = selectedImage,
-                                   let imageData = selectedImage.compressedJPEGData(maxSizeKB: 1024) {
-                                    snapshot.sourceImage = imageData
-                                    snapshot.imageAttachedDate = Date()
-                                } else if existingImageData == nil && selectedImage == nil {
-                                    // User removed the image
-                                    snapshot.sourceImage = nil
-                                    snapshot.imageAttachedDate = nil
-                                }
-                            } else {
-                                // Create new snapshot
-                                let valueSnapshot = ValueSnapshot(
-                                    on: date,
-                                    value: value,
-                                    series: selectedSeries,
-                                    processingState: .completed
-                                )
-
-                                // Add image if selected
-                                if let selectedImage = selectedImage,
-                                   let imageData = selectedImage.compressedJPEGData(maxSizeKB: 1024) {
-                                    valueSnapshot.sourceImage = imageData
-                                    valueSnapshot.imageAttachedDate = Date()
-                                }
-
-                                modelContext.insert(valueSnapshot)
-                            }
-
-                            // Remember last used series
-                            if let selectedSeries = selectedSeries {
-                                SeriesManager.shared.setLastUsedSeries(selectedSeries)
-                            }
-
-                            try? modelContext.save()
-                            dismiss()
+                            performSave()
                         }
                         .disabled(selectedSeries == nil)
                     }
@@ -286,53 +300,7 @@ struct ValueSnapshotEditView: View {
                     }
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Save") {
-                            if let snapshot = snapshot {
-                                // Edit existing snapshot
-                                snapshot.date = date
-                                snapshot.value = value
-                                snapshot.series = selectedSeries
-
-                                // Mark as completed if it was pending
-                                if snapshot.state == .pending {
-                                    snapshot.state = .completed
-                                }
-
-                                // Handle image update
-                                if let selectedImage = selectedImage,
-                                   let imageData = selectedImage.compressedJPEGData(maxSizeKB: 1024) {
-                                    snapshot.sourceImage = imageData
-                                    snapshot.imageAttachedDate = Date()
-                                } else if existingImageData == nil && selectedImage == nil {
-                                    // User removed the image
-                                    snapshot.sourceImage = nil
-                                    snapshot.imageAttachedDate = nil
-                                }
-                            } else {
-                                // Create new snapshot
-                                let valueSnapshot = ValueSnapshot(
-                                    on: date,
-                                    value: value,
-                                    series: selectedSeries,
-                                    processingState: .completed
-                                )
-
-                                // Add image if selected
-                                if let selectedImage = selectedImage,
-                                   let imageData = selectedImage.compressedJPEGData(maxSizeKB: 1024) {
-                                    valueSnapshot.sourceImage = imageData
-                                    valueSnapshot.imageAttachedDate = Date()
-                                }
-
-                                modelContext.insert(valueSnapshot)
-                            }
-
-                            // Remember last used series
-                            if let selectedSeries = selectedSeries {
-                                SeriesManager.shared.setLastUsedSeries(selectedSeries)
-                            }
-
-                            try? modelContext.save()
-                            dismiss()
+                            performSave()
                         }
                         .disabled(selectedSeries == nil)
                     }
@@ -346,7 +314,7 @@ struct ValueSnapshotEditView: View {
                         selectedSeries = snapshot.series
                         existingImageData = snapshot.sourceImage
 
-                        #if os(macOS)
+                        #if os(macOS) && DEBUG
                         // Debug: Check image data on macOS
                         if let imageData = snapshot.sourceImage {
                             print("📸 macOS: Image data exists, size: \(imageData.count) bytes")
@@ -373,7 +341,11 @@ struct ValueSnapshotEditView: View {
                     Button("Delete Entry", role: .destructive) {
                         if let snapshot = snapshot {
                             modelContext.delete(snapshot)
-                            try? modelContext.save()
+                            let result = SaveErrorHandler.save(modelContext, operation: "Delete entry")
+                            if case .failure(let error) = result {
+                                saveError = error
+                                return
+                            }
                             dismiss()
                         }
                     }
@@ -381,6 +353,7 @@ struct ValueSnapshotEditView: View {
                 } message: {
                     Text("This action cannot be undone.")
                 }
+                .saveErrorAlert(error: $saveError, retryAction: performSave)
     }
 }
 

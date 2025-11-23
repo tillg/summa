@@ -13,21 +13,22 @@ import AppKit
 
 @main
 struct SummaApp: App {
-    // App Group identifier for shared container with Share Extension
-    private let appGroupIdentifier = "group.com.grtnr.Summa"
-
     @State private var syncMonitor = CloudKitSyncMonitor()
     @State private var showSyncError = false
 
     var sharedModelContainer: ModelContainer = {
         // Get App Group container URL
         guard let appGroupURL = FileManager.default
-            .containerURL(forSecurityApplicationGroupIdentifier: "group.com.grtnr.Summa") else {
+            .containerURL(forSecurityApplicationGroupIdentifier: AppConstants.appGroupIdentifier) else {
+            #if DEBUG
             print("❌ ERROR: Failed to get App Group container")
+            #endif
             fatalError("Failed to get App Group container")
         }
 
-        let storeURL = appGroupURL.appending(path: "Summa.sqlite")
+        let storeURL = appGroupURL.appending(path: AppConstants.databaseFileName)
+
+        #if DEBUG
         print("📁 SwiftData store location: \(storeURL.path)")
 
         // Check if database file exists
@@ -36,6 +37,7 @@ struct SummaApp: App {
         } else {
             print("⚠️ Database file does NOT exist yet (will be created)")
         }
+        #endif
 
         let config = ModelConfiguration(url: storeURL)
 
@@ -44,10 +46,14 @@ struct SummaApp: App {
                 for: ValueSnapshot.self, Series.self,
                 configurations: config
             )
+            #if DEBUG
             print("✅ ModelContainer created successfully")
+            #endif
             return container
         } catch {
+            #if DEBUG
             print("❌ ERROR creating ModelContainer: \(error)")
+            #endif
             fatalError("Could not create ModelContainer: \(error)")
         }
     }()
@@ -56,7 +62,7 @@ struct SummaApp: App {
         WindowGroup {
             ContentView()
                 #if os(macOS)
-                .frame(minWidth: 800, minHeight: 600)
+                .frame(minWidth: AppConstants.UI.minWindowWidth, minHeight: AppConstants.UI.minWindowHeight)
                 #endif
                 .overlay {
                     // Show loading overlay during initial sync
@@ -116,7 +122,7 @@ struct SummaApp: App {
         }
         .modelContainer(sharedModelContainer)
         #if os(macOS)
-        .defaultSize(width: 1200, height: 800)
+        .defaultSize(width: AppConstants.UI.defaultWindowWidth, height: AppConstants.UI.defaultWindowHeight)
         .commands {
             CommandGroup(after: .newItem) {
                 Button("New Entry") {

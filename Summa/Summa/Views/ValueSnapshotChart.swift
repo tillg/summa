@@ -13,16 +13,16 @@ import Charts
 
 struct ValueSnapshotChart: View {
 
-    let oneWeekAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date.now) ?? Date.now
-    let oneMonthAgo = Calendar.current.date(byAdding: .month, value: -1, to: Date.now) ?? Date.now
-    let oneYearAgo = Calendar.current.date(byAdding: .year, value: -1, to: Date.now) ?? Date.now
-    let everAgo = Calendar.current.date(byAdding: .year, value: -10, to: Date.now) ?? Date.now
+    let oneWeekAgo = Calendar.current.date(byAdding: .day, value: AppConstants.Chart.weekDays, to: Date.now) ?? Date.now
+    let oneMonthAgo = Calendar.current.date(byAdding: .month, value: AppConstants.Chart.monthDuration, to: Date.now) ?? Date.now
+    let oneYearAgo = Calendar.current.date(byAdding: .year, value: AppConstants.Chart.yearDuration, to: Date.now) ?? Date.now
+    let everAgo = Calendar.current.date(byAdding: .year, value: AppConstants.Chart.allTimeDuration, to: Date.now) ?? Date.now
     var valueHistory: [ValueSnapshot]
     var allSeries: [Series]
     @Binding var visibleSeriesIDs: Set<UUID>
     var horizontalSizeClass: UserInterfaceSizeClass?
 
-    @State private var selectedPeriod: Date = Calendar.current.date(byAdding: .day, value: -7, to: Date.now) ?? Date.now
+    @State private var selectedPeriod: Date = Calendar.current.date(byAdding: .day, value: AppConstants.Chart.weekDays, to: Date.now) ?? Date.now
 
     private var valuesToDraw: [ValueSnapshot] {
         valueHistory.filter { snapshot in
@@ -57,7 +57,7 @@ struct ValueSnapshotChart: View {
                 if valuesToDraw.isEmpty {
                     Text("No data for selected period")
                         .foregroundColor(.secondary)
-                        .frame(minHeight: 100)
+                        .frame(minHeight: AppConstants.Chart.minHeight)
                         .frame(maxHeight: .infinity)
                 } else {
                     Chart {
@@ -73,13 +73,13 @@ struct ValueSnapshotChart: View {
                                         series: .value("Series", series.name)
                                     )
                                     .foregroundStyle(SeriesManager.shared.colorFromHex(series.color))
-                                    .lineStyle(.init(lineWidth: 3, lineCap: .round, lineJoin: .round))
+                                    .lineStyle(.init(lineWidth: AppConstants.Chart.lineWidth, lineCap: .round, lineJoin: .round))
                                 }
                             }
                         }
                     }
                     .chartYScale(domain: [minValueToDraw, maxValueToDraw])
-                    .frame(minHeight: 100)
+                    .frame(minHeight: AppConstants.Chart.minHeight)
                     .frame(maxHeight: .infinity)
                 }
             }
@@ -117,7 +117,7 @@ struct ValueSnapshotChart: View {
                                     HStack(spacing: 6) {
                                         Circle()
                                             .fill(SeriesManager.shared.colorFromHex(series.color))
-                                            .frame(width: 12, height: 12)
+                                            .frame(width: AppConstants.UI.seriesIndicatorSize, height: AppConstants.UI.seriesIndicatorSize)
                                             .opacity(visibleSeriesIDs.contains(series.id) ? 1.0 : 0.3)
 
                                         Text(series.name)

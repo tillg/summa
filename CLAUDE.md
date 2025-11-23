@@ -100,7 +100,7 @@ Swift files are organized in `Summa/Summa/` with the following structure:
 
 **Utils/** - Utilities and services
 - `SeriesManager.swift` - Series management service and utilities
-- `DateExtension.swift` - Date utility extensions
+- `CloudKitSyncMonitor.swift` - CloudKit sync state monitoring
 
 ## Working with SwiftData
 

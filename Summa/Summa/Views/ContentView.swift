@@ -97,6 +97,7 @@ struct ContentView: View {
                 // Initialize all series as visible by default
                 visibleSeriesIDs = Set(allSeries.map { $0.id })
 
+                #if DEBUG
                 // Debug: Print what data we have
                 print("📊 Total snapshots loaded: \(valueHistory.count)")
                 let pendingCount = valueHistory.filter { $0.state == .pending }.count
@@ -110,6 +111,7 @@ struct ContentView: View {
                         print("   - Date: \(snapshot.date), Has image: \(snapshot.sourceImage != nil)")
                     }
                 }
+                #endif
 
                 #if os(macOS)
                 // Setup NotificationCenter observers for macOS menu commands

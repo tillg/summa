@@ -30,7 +30,7 @@ struct ValueSnapshotListEntryView: View {
             if let series = snapshot.series {
                 Circle()
                     .fill(SeriesManager.shared.colorFromHex(series.color))
-                    .frame(width: 12, height: 12)
+                    .frame(width: AppConstants.UI.seriesIndicatorSize, height: AppConstants.UI.seriesIndicatorSize)
                     .padding(.top, horizontalSizeClass == .regular ? 3 : 0)
             }
 

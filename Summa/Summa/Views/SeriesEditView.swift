@@ -19,8 +19,9 @@ struct SeriesEditView: View {
     @State private var name: String = ""
     @State private var selectedColor: String = SeriesManager.predefinedColors[0]
     @State private var isDefault: Bool = false
-    @State private var showingDeleteConfirmation = false
+    @State private var seriesToDelete: Series?
     @State private var deleteConfirmationText = ""
+    @State private var saveError: Error?
 
     var body: some View {
         NavigationStack {
@@ -30,7 +31,7 @@ struct SeriesEditView: View {
                 }
 
                 Section("Color") {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 44))], spacing: 12) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: AppConstants.UI.colorPickerCircleSize))], spacing: AppConstants.UI.colorPickerSpacing) {
                         ForEach(SeriesManager.predefinedColors, id: \.self) { color in
                             Button {
                                 selectedColor = color
@@ -38,7 +39,7 @@ struct SeriesEditView: View {
                                 ZStack {
                                     Circle()
                                         .fill(SeriesManager.shared.colorFromHex(color))
-                                        .frame(width: 44, height: 44)
+                                        .frame(width: AppConstants.UI.colorPickerCircleSize, height: AppConstants.UI.colorPickerCircleSize)
 
                                     if selectedColor == color {
                                         Image(systemName: "checkmark")
@@ -70,7 +71,7 @@ struct SeriesEditView: View {
                 if let series = series, !series.isDefault {
                     Section {
                         Button(role: .destructive) {
-                            showingDeleteConfirmation = true
+                            seriesToDelete = series
                         } label: {
                             Label("Delete Series", systemImage: "trash")
                         }
@@ -121,26 +122,13 @@ struct SeriesEditView: View {
                     isDefault = series.isDefault
                 }
             }
-            .alert("Delete \"\(series?.name ?? "")\"?", isPresented: $showingDeleteConfirmation) {
-                TextField("Enter series name to confirm", text: $deleteConfirmationText)
-                Button("Cancel", role: .cancel) {
-                    deleteConfirmationText = ""
-                }
-                Button("Delete", role: .destructive) {
-                    if let series = series,
-                       deleteConfirmationText == series.name,
-                       !series.isDefault {
-                        modelContext.delete(series)
-                        try? modelContext.save()
-                        dismiss()
-                    }
-                }
-                .disabled(deleteConfirmationText != series?.name || series?.isDefault == true)
-            } message: {
-                if let series = series {
-                    Text("This will delete \(series.snapshots?.count ?? 0) entries. This action cannot be undone.\n\nTo confirm, enter the series name:")
-                }
-            }
+            .seriesDeleteConfirmation(
+                seriesToDelete: $seriesToDelete,
+                confirmationText: $deleteConfirmationText,
+                modelContext: modelContext,
+                onDelete: { dismiss() }
+            )
+            .saveErrorAlert(error: $saveError, retryAction: saveChanges)
         }
     }
 
@@ -179,7 +167,14 @@ struct SeriesEditView: View {
                 SeriesManager.shared.setDefaultSeries(newSeries, allSeries: allSeries + [newSeries], context: modelContext)
             }
         }
-        try? modelContext.save()
+
+        // Save changes
+        let result = SaveErrorHandler.save(modelContext, operation: "Save series '\(name)'")
+        if case .failure(let error) = result {
+            saveError = error
+            return
+        }
+
         dismiss()
     }
 }

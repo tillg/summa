@@ -52,6 +52,7 @@
 			membershipExceptions = (
 				Models/Series.swift,
 				Models/ValueSnapshot.swift,
+				Utils/AppConstants.swift,
 				Utils/SeriesManager.swift,
 			);
 			target = F97186D52ECC8CBA00AE1AD7 /* Summa Share Extension */;

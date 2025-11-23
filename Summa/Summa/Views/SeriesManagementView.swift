@@ -16,7 +16,7 @@ struct SeriesManagementView: View {
 
     @State private var showingAddSeries = false
     @State private var showingEditSeries: Series?
-    @State private var showingDeleteConfirmation: Series?
+    @State private var seriesToDelete: Series?
     @State private var deleteConfirmationText = ""
 
     var body: some View {
@@ -32,7 +32,7 @@ struct SeriesManagementView: View {
                     .swipeActions {
                         if !series.isDefault {
                             Button(role: .destructive) {
-                                showingDeleteConfirmation = series
+                                seriesToDelete = series
                                 deleteConfirmationText = ""
                             } label: {
                                 Label("Delete", systemImage: "trash")
@@ -43,7 +43,7 @@ struct SeriesManagementView: View {
                     .contextMenu {
                         if !series.isDefault {
                             Button(role: .destructive) {
-                                showingDeleteConfirmation = series
+                                seriesToDelete = series
                                 deleteConfirmationText = ""
                             } label: {
                                 Label("Delete", systemImage: "trash")
@@ -77,7 +77,7 @@ struct SeriesManagementView: View {
                 } label: {
                     Image(systemName: "plus")
                 }
-                .disabled(allSeries.count >= 10)
+                .disabled(allSeries.count >= AppConstants.Series.maxSeriesCount)
             }
             #else
             ToolbarItem(placement: .cancellationAction) {
@@ -91,7 +91,7 @@ struct SeriesManagementView: View {
                 } label: {
                     Label("Add Series", systemImage: "plus")
                 }
-                .disabled(allSeries.count >= 10)
+                .disabled(allSeries.count >= AppConstants.Series.maxSeriesCount)
             }
             #endif
         }
@@ -107,27 +107,10 @@ struct SeriesManagementView: View {
             .presentationSizing(.form)
             #endif
         }
-        .alert("Delete \"\(showingDeleteConfirmation?.name ?? "")\"?", isPresented: .constant(showingDeleteConfirmation != nil)) {
-            TextField("Enter series name to confirm", text: $deleteConfirmationText)
-            Button("Cancel", role: .cancel) {
-                showingDeleteConfirmation = nil
-                deleteConfirmationText = ""
-            }
-            Button("Delete", role: .destructive) {
-                if let series = showingDeleteConfirmation,
-                   deleteConfirmationText == series.name,
-                   !series.isDefault {
-                    modelContext.delete(series)
-                    showingDeleteConfirmation = nil
-                    deleteConfirmationText = ""
-                    try? modelContext.save()
-                }
-            }
-            .disabled(deleteConfirmationText != showingDeleteConfirmation?.name || showingDeleteConfirmation?.isDefault == true)
-        } message: {
-            if let series = showingDeleteConfirmation {
-                Text("This will delete \(series.snapshots?.count ?? 0) entries. This action cannot be undone.\n\nTo confirm, enter the series name:")
-            }
-        }
+        .seriesDeleteConfirmation(
+            seriesToDelete: $seriesToDelete,
+            confirmationText: $deleteConfirmationText,
+            modelContext: modelContext
+        )
     }
 }

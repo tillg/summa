@@ -41,6 +41,7 @@ Verify:
 - Preview providers exist for new views
 - Proper use of SwiftData relationships
 - Check against Specs/BEST_PRACTICE_*.md
+- View have reasonable #Preview s
 
 ## 6. Documentation
 

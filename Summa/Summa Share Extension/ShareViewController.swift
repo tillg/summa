@@ -10,25 +10,55 @@ import SwiftData
 
 class ShareViewController: UIViewController {
 
-    // App Group identifier for shared container
-    private let appGroupIdentifier = "group.com.grtnr.Summa"
-
     // Access shared SwiftData container via App Group
-    lazy var modelContainer: ModelContainer = {
-        let storeURL = FileManager.default
-            .containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier)!
-            .appending(path: "Summa.sqlite")
-
-        let config = ModelConfiguration(url: storeURL)
-        return try! ModelContainer(
-            for: ValueSnapshot.self, Series.self,
-            configurations: config
-        )
-    }()
+    private var modelContainer: ModelContainer?
+    private var containerError: Error?
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        processSharedImage()
+
+        // Initialize model container
+        do {
+            modelContainer = try createModelContainer()
+            processSharedImage()
+        } catch {
+            containerError = error
+            showErrorAndDismiss(message: "Unable to access Summa database. Please ensure the app is properly installed.")
+        }
+    }
+
+    private func createModelContainer() throws -> ModelContainer {
+        // Get App Group container URL
+        guard let appGroupURL = FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: AppConstants.appGroupIdentifier) else {
+            #if DEBUG
+            print("❌ ERROR: Failed to get App Group container")
+            #endif
+            throw NSError(
+                domain: "SummaShare",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: "Failed to access App Group container"]
+            )
+        }
+
+        let storeURL = appGroupURL.appending(path: AppConstants.databaseFileName)
+
+        #if DEBUG
+        print("📁 SwiftData store location: \(storeURL.path)")
+        #endif
+
+        let config = ModelConfiguration(url: storeURL)
+
+        let container = try ModelContainer(
+            for: ValueSnapshot.self, Series.self,
+            configurations: config
+        )
+
+        #if DEBUG
+        print("✅ ModelContainer created successfully in Share Extension")
+        #endif
+
+        return container
     }
 
     private func processSharedImage() {
@@ -44,7 +74,9 @@ class ShareViewController: UIViewController {
                 guard let self = self else { return }
 
                 if let error = error {
+                    #if DEBUG
                     print("Error loading image: \(error)")
+                    #endif
                     DispatchQueue.main.async {
                         self.completeRequest(success: false)
                     }
@@ -78,6 +110,15 @@ class ShareViewController: UIViewController {
     }
 
     private func createPendingSnapshot(with imageData: Data) {
+        // Ensure we have a valid model container
+        guard let modelContainer = modelContainer else {
+            #if DEBUG
+            print("❌ ERROR: ModelContainer not available")
+            #endif
+            completeRequest(success: false)
+            return
+        }
+
         // Create new pending snapshot
         let snapshot = ValueSnapshot(
             on: Date(),
@@ -99,7 +140,9 @@ class ShareViewController: UIViewController {
                     self.completeRequest(success: true)
                 }
             } catch {
+                #if DEBUG
                 print("Error saving snapshot: \(error)")
+                #endif
                 await MainActor.run {
                     self.completeRequest(success: false)
                 }
@@ -124,6 +167,24 @@ class ShareViewController: UIViewController {
             } else {
                 self.extensionContext?.cancelRequest(withError: NSError(domain: "SummaShare", code: -1))
             }
+        }
+    }
+
+    private func showErrorAndDismiss(message: String) {
+        DispatchQueue.main.async {
+            let alert = UIAlertController(
+                title: "Error",
+                message: message,
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+                self.extensionContext?.cancelRequest(withError: NSError(
+                    domain: "SummaShare",
+                    code: 2,
+                    userInfo: [NSLocalizedDescriptionKey: message]
+                ))
+            })
+            self.present(alert, animated: true)
         }
     }
 }
