@@ -31,8 +31,6 @@ struct ValueSnapshotEditView: View {
     @State private var selectedImage: PlatformImage?
     @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var existingImageData: Data?
-    @State private var showingFullScreenImage = false
-    @State private var fullScreenImage: PlatformImage?
 
     // Delete confirmation
     @State private var showingDeleteConfirmation = false
@@ -77,20 +75,12 @@ struct ValueSnapshotEditView: View {
                             .scaledToFit()
                             .frame(maxHeight: 200)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
-                            .onTapGesture {
-                                fullScreenImage = selectedImage
-                                showingFullScreenImage = true
-                            }
                         #elseif os(macOS)
                         Image(nsImage: selectedImage)
                             .resizable()
                             .scaledToFit()
                             .frame(maxHeight: 400)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
-                            .onTapGesture {
-                                fullScreenImage = selectedImage
-                                showingFullScreenImage = true
-                            }
                         #endif
 
                         HStack(spacing: 12) {
@@ -131,10 +121,6 @@ struct ValueSnapshotEditView: View {
                                 .scaledToFit()
                                 .frame(maxHeight: 200)
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
-                                .onTapGesture {
-                                    fullScreenImage = uiImage
-                                    showingFullScreenImage = true
-                                }
                         }
                         #elseif os(macOS)
                         if let nsImage = PlatformImage.fromData(existingImageData) {
@@ -151,10 +137,6 @@ struct ValueSnapshotEditView: View {
                                     .aspectRatio(contentMode: .fit)
                                     .frame(width: displayWidth, height: displayHeight)
                                     .cornerRadius(8)
-                                    .onTapGesture {
-                                        fullScreenImage = nsImage
-                                        showingFullScreenImage = true
-                                    }
                                 Spacer()
                             }
                         } else {
@@ -384,13 +366,6 @@ struct ValueSnapshotEditView: View {
                         }
                     }
                 }
-                .sheet(isPresented: $showingFullScreenImage) {
-                    NavigationStack {
-                        if let fullScreenImage = fullScreenImage {
-                            ImageViewer(image: fullScreenImage)
-                        }
-                    }
-                }
                 .alert(
                     "Delete this entry?",
                     isPresented: $showingDeleteConfirmation
@@ -409,108 +384,10 @@ struct ValueSnapshotEditView: View {
     }
 }
 
-// Full-screen image viewer
-struct ImageViewer: View {
-    let image: PlatformImage
-    @Environment(\.dismiss) private var dismiss
-    @GestureState private var zoom = 1.0
-
-    var body: some View {
-        GeometryReader { geometry in
-            ScrollView([.horizontal, .vertical], showsIndicators: false) {
-                #if os(iOS)
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: geometry.size.width)
-                    .scaleEffect(zoom)
-                    .gesture(
-                        MagnificationGesture()
-                            .updating($zoom) { value, gestureState, _ in
-                                gestureState = value
-                            }
-                    )
-                #elseif os(macOS)
-                Image(nsImage: image)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: geometry.size.width)
-                    .scaleEffect(zoom)
-                    .gesture(
-                        MagnificationGesture()
-                            .updating($zoom) { value, gestureState, _ in
-                                gestureState = value
-                            }
-                    )
-                #endif
-            }
-        }
-        .navigationTitle("Screenshot")
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        #endif
-        .toolbar {
-            #if os(iOS)
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Done") {
-                    dismiss()
-                }
-            }
-            #else
-            ToolbarItem(placement: .confirmationAction) {
-                Button("Done") {
-                    dismiss()
-                }
-            }
-            #endif
-        }
-        .ignoresSafeArea(edges: .bottom)
-    }
-}
-
 #Preview {
     NavigationStack {
         ValueSnapshotEditView(snapshot: nil)
     }
     .modelContainer(for: [ValueSnapshot.self, Series.self])
 }
-
-#if os(macOS)
-// Custom NSImage wrapper for better rendering on macOS
-struct MacImageView: NSViewRepresentable {
-    let image: NSImage
-
-    // Wrapper class to provide intrinsic content size
-    class ImageView: AppKit.NSImageView {
-        override var intrinsicContentSize: NSSize {
-            return image?.size ?? NSSize(width: 100, height: 100)
-        }
-    }
-
-    func makeNSView(context: Context) -> ImageView {
-        print("🖼️ MacImageView: Creating NSImageView with image size: \(image.size)")
-        let imageView = ImageView()
-        imageView.image = image
-        imageView.imageScaling = .scaleProportionallyUpOrDown
-
-        // Set content hugging and compression resistance
-        imageView.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        imageView.setContentHuggingPriority(.defaultLow, for: .vertical)
-        imageView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        imageView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
-
-        // Make sure the view is visible
-        imageView.wantsLayer = true
-
-        print("🖼️ MacImageView: NSImageView created, has image: \(imageView.image != nil), intrinsic size: \(imageView.intrinsicContentSize)")
-        return imageView
-    }
-
-    func updateNSView(_ nsView: ImageView, context: Context) {
-        print("🖼️ MacImageView: Updating NSImageView, frame: \(nsView.frame), intrinsic: \(nsView.intrinsicContentSize)")
-        nsView.image = image
-        nsView.invalidateIntrinsicContentSize()
-    }
-}
-#endif
 
