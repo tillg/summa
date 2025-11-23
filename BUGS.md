@@ -16,44 +16,44 @@ When starting the App it takes some time before the Data from iCloud is read. In
 
 **1. Create CloudKitSyncMonitor utility class** (`Utils/CloudKitSyncMonitor.swift`)
 
-- [ ] Create new `@Observable` class (modern Swift Observation, not `ObservableObject`)
-- [ ] Subscribe to `NSPersistentCloudKitContainer.eventChangedNotification` in initializer
-- [ ] Track sync state enum: `.notStarted`, `.syncing`, `.synced`
-- [ ] Expose observable properties for SwiftUI automatic tracking
-- [ ] Listen for `.import` event type with `.succeeded` property
-- [ ] Add `UserDefaults` flag "hasCompletedInitialSync" to remember sync completion across launches
-- [ ] Handle notification on background thread, update state on main thread
+- [x] Create new `@Observable` class (modern Swift Observation, not `ObservableObject`)
+- [x] Subscribe to `NSPersistentCloudKitContainer.eventChangedNotification` in initializer
+- [x] Track sync state enum: `.notStarted`, `.syncing`, `.synced`
+- [x] Expose observable properties for SwiftUI automatic tracking
+- [x] Listen for `.import` event type with `.succeeded` property
+- [x] Add `UserDefaults` flag "hasCompletedInitialSync" to remember sync completion across launches
+- [x] Handle notification on background thread, update state on main thread
 
 **2. Integrate sync monitor into app lifecycle** (`SummaApp.swift`)
 
-- [ ] Initialize `CloudKitSyncMonitor` in `SummaApp` with the model container
-- [ ] Use `@State` (not `@StateObject`) to hold sync monitor instance
-- [ ] Pass sync monitor via `.environment()` modifier (not `.environmentObject()`)
-- [ ] Start monitoring on app launch
+- [x] Initialize `CloudKitSyncMonitor` in `SummaApp` with the model container
+- [x] Use `@State` (not `@StateObject`) to hold sync monitor instance
+- [x] Pass sync monitor via `.environment()` modifier (not `.environmentObject()`)
+- [x] Start monitoring on app launch
 
 **3. Update series initialization logic** (`Utils/SeriesManager.swift`)
 
-- [ ] Move Default series creation from current location to new `initializeDefaultSeriesIfNeeded()` method
-- [ ] Accept `ModelContext` as parameter to perform insertion
-- [ ] Only create Default series after CloudKit sync completes
-- [ ] Check both: no existing series AND sync is complete before creating Default
-- [ ] Call from SummaApp when sync monitor state changes to `.synced`
+- [x] Move Default series creation from current location to new `initializeDefaultSeriesIfNeeded()` method
+- [x] Accept `ModelContext` as parameter to perform insertion
+- [x] Only create Default series after CloudKit sync completes
+- [x] Check both: no existing series AND sync is complete before creating Default
+- [x] Call from SummaApp when sync monitor state changes to `.synced`
 
 **4. Handle UI during sync**
 
-- [ ] Create loading overlay view that covers main UI during initial sync
-- [ ] Show centered `ProgressView` with "Syncing with iCloud..." message
-- [ ] Display on app launch when `syncState == .syncing`
-- [ ] Automatically dismiss when `syncState == .synced`
-- [ ] Use `.overlay()` modifier in SummaApp to layer over ContentView
+- [x] Create loading overlay view that covers main UI during initial sync
+- [x] Show centered `ProgressView` with "Syncing with iCloud..." message
+- [x] Display on app launch when `syncState == .syncing`
+- [x] Automatically dismiss when `syncState == .synced`
+- [x] Use `.overlay()` modifier in SummaApp to layer over ContentView
 
 **5. Handle sync failures and offline state**
 
-- [ ] Detect sync failure when event type is `.import` and `.succeeded == false`
-- [ ] Show alert dialog with error message when sync fails
-- [ ] Provide "Quit" button in alert to stop the app
-- [ ] Use `fatalError()` or exit gracefully after user acknowledges
-- [ ] Log error details for debugging
+- [x] Detect sync failure when event type is `.import` and `.succeeded == false`
+- [x] Show alert dialog with error message when sync fails
+- [x] Provide "Quit" button in alert to stop the app
+- [x] Use `fatalError()` or exit gracefully after user acknowledges
+- [x] Log error details for debugging
 
 **6. Architecture considerations**
 

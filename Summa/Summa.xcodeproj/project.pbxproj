@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		F97186E02ECC8CBA00AE1AD7 /* Summa Share Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F97186D62ECC8CBA00AE1AD7 /* Summa Share Extension.appex */; platformFilters = (ios, ); settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		F97186E02ECC8CBA00AE1AD7 /* Summa Share Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F97186D62ECC8CBA00AE1AD7 /* Summa Share Extension.appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */

@@ -16,6 +16,9 @@ struct SummaApp: App {
     // App Group identifier for shared container with Share Extension
     private let appGroupIdentifier = "group.com.grtnr.Summa"
 
+    @State private var syncMonitor = CloudKitSyncMonitor()
+    @State private var showSyncError = false
+
     var sharedModelContainer: ModelContainer = {
         // Get App Group container URL
         guard let appGroupURL = FileManager.default
@@ -55,6 +58,61 @@ struct SummaApp: App {
                 #if os(macOS)
                 .frame(minWidth: 800, minHeight: 600)
                 #endif
+                .overlay {
+                    // Show loading overlay during initial sync
+                    if syncMonitor.syncState == .syncing {
+                        ZStack {
+                            Color.black.opacity(0.4)
+                                .ignoresSafeArea()
+
+                            VStack(spacing: 16) {
+                                ProgressView()
+                                    .scaleEffect(1.5)
+                                Text("Syncing with iCloud...")
+                                    .font(.headline)
+                            }
+                            .padding(32)
+                            #if os(iOS)
+                            .background(Color(uiColor: .systemBackground))
+                            #elseif os(macOS)
+                            .background(Color(nsColor: .windowBackgroundColor))
+                            #endif
+                            .cornerRadius(16)
+                            .shadow(radius: 10)
+                        }
+                    }
+                }
+                .environment(syncMonitor)
+                .onAppear {
+                    // Set model context for SeriesManager
+                    Task { @MainActor in
+                        SeriesManager.shared.setModelContext(sharedModelContainer.mainContext)
+                    }
+                }
+                .onChange(of: syncMonitor.syncState) { oldValue, newValue in
+                    // When sync completes, initialize default series if needed
+                    if newValue == .synced && oldValue != .synced {
+                        Task { @MainActor in
+                            SeriesManager.shared.initializeDefaultSeriesIfNeeded()
+                        }
+                    }
+
+                    // Show error alert if sync failed
+                    if syncMonitor.lastError != nil {
+                        showSyncError = true
+                    }
+                }
+                .alert("Sync Failed", isPresented: $showSyncError) {
+                    Button("Quit", role: .destructive) {
+                        #if os(iOS)
+                        fatalError("CloudKit sync failed")
+                        #elseif os(macOS)
+                        NSApplication.shared.terminate(nil)
+                        #endif
+                    }
+                } message: {
+                    Text("Unable to sync with iCloud. Please check your network connection and iCloud settings.\n\nError: \(syncMonitor.lastError?.localizedDescription ?? "Unknown error")")
+                }
         }
         .modelContainer(sharedModelContainer)
         #if os(macOS)
