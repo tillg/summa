@@ -40,7 +40,7 @@ Verify:
 - State management is appropriate (@State, @Binding, @Query)
 - Preview providers exist for new views
 - Proper use of SwiftData relationships
-- Check against Specs/SWIFTUI_NAVIGATION_BEST_PRACTICES.md
+- Check against Specs/BEST_PRACTICE_*.md
 
 ## 6. Documentation
 
