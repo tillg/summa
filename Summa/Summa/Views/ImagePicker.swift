@@ -52,7 +52,12 @@ extension PlatformImage {
         #if os(iOS)
         return UIImage(data: data)
         #elseif os(macOS)
-        return NSImage(data: data)
+        guard let image = NSImage(data: data) else { return nil }
+        // Ensure NSImage has proper size set from its representations
+        if let rep = image.representations.first {
+            image.size = NSSize(width: rep.pixelsWide, height: rep.pixelsHigh)
+        }
+        return image
         #endif
     }
 }

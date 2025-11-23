@@ -34,8 +34,9 @@ struct SeriesRowView: View {
                     }
                 }
                 if let snapshots = series.snapshots,
-                   let latestSnapshot = snapshots.sorted(by: { $0.date > $1.date }).first {
-                    Text(latestSnapshot.value.formatted(.currency(code: Locale.current.currency?.identifier ?? "EUR")))
+                   let latestSnapshot = snapshots.sorted(by: { $0.date > $1.date }).first,
+                   let value = latestSnapshot.value {
+                    Text(value.formatted(.currency(code: Locale.current.currency?.identifier ?? "EUR")))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }

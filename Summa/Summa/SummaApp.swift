@@ -13,6 +13,42 @@ import AppKit
 
 @main
 struct SummaApp: App {
+    // App Group identifier for shared container with Share Extension
+    private let appGroupIdentifier = "group.com.grtnr.Summa"
+
+    var sharedModelContainer: ModelContainer = {
+        // Get App Group container URL
+        guard let appGroupURL = FileManager.default
+            .containerURL(forSecurityApplicationGroupIdentifier: "group.com.grtnr.Summa") else {
+            print("❌ ERROR: Failed to get App Group container")
+            fatalError("Failed to get App Group container")
+        }
+
+        let storeURL = appGroupURL.appending(path: "Summa.sqlite")
+        print("📁 SwiftData store location: \(storeURL.path)")
+
+        // Check if database file exists
+        if FileManager.default.fileExists(atPath: storeURL.path) {
+            print("✅ Database file exists at App Group location")
+        } else {
+            print("⚠️ Database file does NOT exist yet (will be created)")
+        }
+
+        let config = ModelConfiguration(url: storeURL)
+
+        do {
+            let container = try ModelContainer(
+                for: ValueSnapshot.self, Series.self,
+                configurations: config
+            )
+            print("✅ ModelContainer created successfully")
+            return container
+        } catch {
+            print("❌ ERROR creating ModelContainer: \(error)")
+            fatalError("Could not create ModelContainer: \(error)")
+        }
+    }()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -20,7 +56,7 @@ struct SummaApp: App {
                 .frame(minWidth: 800, minHeight: 600)
                 #endif
         }
-        .modelContainer(for: [ValueSnapshot.self, Series.self])
+        .modelContainer(sharedModelContainer)
         #if os(macOS)
         .defaultSize(width: 1200, height: 800)
         .commands {

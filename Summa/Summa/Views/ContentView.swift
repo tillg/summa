@@ -101,6 +101,20 @@ struct ContentView: View {
                 // Initialize all series as visible by default
                 visibleSeriesIDs = Set(allSeries.map { $0.id })
 
+                // Debug: Print what data we have
+                print("📊 Total snapshots loaded: \(valueHistory.count)")
+                let pendingCount = valueHistory.filter { $0.state == .pending }.count
+                let completedCount = valueHistory.filter { $0.state == .completed }.count
+                print("   - Pending: \(pendingCount)")
+                print("   - Completed: \(completedCount)")
+
+                if pendingCount > 0 {
+                    print("🔍 Pending snapshots:")
+                    for snapshot in valueHistory.filter({ $0.state == .pending }) {
+                        print("   - Date: \(snapshot.date), Has image: \(snapshot.sourceImage != nil)")
+                    }
+                }
+
                 #if os(macOS)
                 // Setup NotificationCenter observers for macOS menu commands
                 setupMacOSMenuObservers()
@@ -205,6 +219,7 @@ struct ContentView: View {
                         valueRow(for: value)
                     }
                     .buttonStyle(.plain)
+                    .listRowBackground(value.state == .pending ? Color.gray.opacity(0.15) : nil)
                     #if os(iOS)
                     .hoverEffect(.lift)
                     #endif
@@ -216,48 +231,7 @@ struct ContentView: View {
 
     /// Individual row in the value history list
     private func valueRow(for value: ValueSnapshot) -> some View {
-        HStack(alignment: .top, spacing: 8) {
-            if let series = value.series {
-                Circle()
-                    .fill(SeriesManager.shared.colorFromHex(series.color))
-                    .frame(width: 12, height: 12)
-                    .padding(.top, horizontalSizeClass == .regular ? 3 : 0)
-            }
-
-            if horizontalSizeClass == .regular {
-                // iPad layout: two lines
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("\(value.date.formatted(date: .abbreviated, time: .shortened))")
-                        .lineLimit(1)
-
-                    HStack {
-                        if let series = value.series {
-                            Text(series.name)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        Spacer()
-                        Text(value.value.formatted(.currency(code: Locale.current.currency?.identifier ?? "EUR")))
-                            .fontWeight(.medium)
-                    }
-                }
-            } else {
-                // iPhone layout: compact single line
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("\(value.date.formatted(date: .abbreviated, time: .shortened))")
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.85)
-                    if let series = value.series {
-                        Text(series.name)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                Spacer()
-                Text(value.value.formatted(.currency(code: Locale.current.currency?.identifier ?? "EUR")))
-                    .fontWeight(.medium)
-            }
-        }
+        ValueSnapshotListEntryView(snapshot: value, horizontalSizeClass: horizontalSizeClass)
     }
 }
 

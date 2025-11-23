@@ -28,17 +28,19 @@ struct ValueSnapshotChart: View {
         valueHistory.filter { snapshot in
             snapshot.date >= selectedPeriod &&
             snapshot.series != nil &&
+            snapshot.value != nil &&  // Only show completed snapshots with values
+            snapshot.state == .completed &&
             visibleSeriesIDs.contains(snapshot.series!.id)
         }
         .sorted { $0.date < $1.date }
     }
 
     private var minValueToDraw: Double {
-        valuesToDraw.min(by: { $0.value < $1.value })?.value ?? 0
+        valuesToDraw.compactMap { $0.value }.min() ?? 0
     }
 
     private var maxValueToDraw: Double {
-        valuesToDraw.max(by: { $0.value < $1.value })?.value ?? 0
+        valuesToDraw.compactMap { $0.value }.max() ?? 0
     }
 
     // Group snapshots by series for drawing
@@ -64,13 +66,15 @@ struct ValueSnapshotChart: View {
                             !snapshotsForSeries(series).isEmpty
                         }) { series in
                             ForEach(snapshotsForSeries(series)) { snapshot in
-                                LineMark(
-                                    x: .value("Date", snapshot.date),
-                                    y: .value("Value", snapshot.value),
-                                    series: .value("Series", series.name)
-                                )
-                                .foregroundStyle(SeriesManager.shared.colorFromHex(series.color))
-                                .lineStyle(.init(lineWidth: 3, lineCap: .round, lineJoin: .round))
+                                if let value = snapshot.value {
+                                    LineMark(
+                                        x: .value("Date", snapshot.date),
+                                        y: .value("Value", value),
+                                        series: .value("Series", series.name)
+                                    )
+                                    .foregroundStyle(SeriesManager.shared.colorFromHex(series.color))
+                                    .lineStyle(.init(lineWidth: 3, lineCap: .round, lineJoin: .round))
+                                }
                             }
                         }
                     }
