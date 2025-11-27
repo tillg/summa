@@ -17,14 +17,21 @@ Search for:
 - Dead code that's commented out
 - Obsolete files that should be deleted
 
-## 3. Find Duplicate Code
+## 3. Architecture
+
+Check that
+- Architecture is coherent
+- Repeated logic that could be extracted into shared functions
+- If it can’t be tested in 10ms without UI or network, it’s badly designed.
+  
+
+## 4. Find Duplicate Code
 
 Look for:
-- Repeated logic that could be extracted into shared functions
 - Similar view code that could be componentized
 - Duplicate constants or configurations
 
-## 4. Code Quality Issues
+## 5. Code Quality Issues
 
 Check for:
 - TODO/FIXME comments that need addressing
@@ -33,7 +40,7 @@ Check for:
 - Force unwraps (!) that could be safer
 - Error handling that could be improved
 
-## 5. SwiftUI Best Practices
+## 6. SwiftUI Best Practices
 
 Verify:
 - View components are properly extracted and reusable
@@ -43,7 +50,7 @@ Verify:
 - Check against Specs/BEST_PRACTICE_*.md
 - View have reasonable #Preview s
 
-## 6. Documentation
+## 7. Documentation
 
 Ensure:
 - New public functions have comments
@@ -51,7 +58,7 @@ Ensure:
 - File headers are present
 - README or specs are updated if needed
 
-## 7. Complexity
+## 8. Complexity
 
 Ensure we don't have over complex code. 
 
