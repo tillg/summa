@@ -11,6 +11,8 @@ import SwiftData
 struct ContentView: View {
     @Environment(\.modelContext) var modelContext
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    @Environment(ScreenshotAnalysisService.self) var analysisService
+    @Environment(CloudKitSyncMonitor.self) var syncMonitor
     @Query var valueHistory: [ValueSnapshot]
     @Query(sort: \Series.sortOrder) var allSeries: [Series]
     @State private var showingAddValueSnapshot: Bool = false
@@ -100,15 +102,23 @@ struct ContentView: View {
                 #if DEBUG
                 // Debug: Print what data we have
                 print("📊 Total snapshots loaded: \(valueHistory.count)")
-                let pendingCount = valueHistory.filter { $0.state == .pending }.count
-                let completedCount = valueHistory.filter { $0.state == .completed }.count
-                print("   - Pending: \(pendingCount)")
-                print("   - Completed: \(completedCount)")
+                let pendingAnalysisCount = valueHistory.filter { $0.analysisState == .pendingAnalysis }.count
+                let analyzingCount = valueHistory.filter { $0.analysisState == .analyzing }.count
+                let partialCount = valueHistory.filter { $0.analysisState == .analysisCompletePartial }.count
+                let fullCount = valueHistory.filter { $0.analysisState == .analysisCompleteFull }.count
+                let failedCount = valueHistory.filter { $0.analysisState == .analysisFailed }.count
+                let completedCount = valueHistory.filter { $0.analysisState == .humanConfirmed }.count
+                print("   - Pending Analysis: \(pendingAnalysisCount)")
+                print("   - Analyzing: \(analyzingCount)")
+                print("   - Complete Partial: \(partialCount)")
+                print("   - Complete Full: \(fullCount)")
+                print("   - Failed: \(failedCount)")
+                print("   - Human Confirmed: \(completedCount)")
 
-                if pendingCount > 0 {
-                    print("🔍 Pending snapshots:")
-                    for snapshot in valueHistory.filter({ $0.state == .pending }) {
-                        print("   - Date: \(snapshot.date), Has image: \(snapshot.sourceImage != nil)")
+                if pendingAnalysisCount > 0 {
+                    print("🔍 Snapshots pending analysis:")
+                    for snapshot in valueHistory.filter({ $0.analysisState == .pendingAnalysis }) {
+                        print("   - Date: \(snapshot.date), Has screenshot: \(snapshot.sourceImage != nil)")
                     }
                 }
                 #endif
@@ -125,6 +135,12 @@ struct ContentView: View {
                         visibleSeriesIDs.insert(series.id)
                     }
                 }
+            }
+            .onChange(of: syncMonitor.lastImportDate) { _, _ in
+                // Force UI refresh when CloudKit imports new data
+                #if DEBUG
+                print("🔄 CloudKit import detected, refreshing UI...")
+                #endif
             }
     }
 
@@ -211,26 +227,42 @@ struct ContentView: View {
 
             List {
                 ForEach(valueHistory.sorted(by: { $0.date > $1.date }), id: \.self) { value in
-                    Button {
-                        editingSnapshot = value
-                    } label: {
-                        valueRow(for: value)
-                    }
-                    .buttonStyle(.plain)
-                    .listRowBackground(value.state == .pending ? Color.gray.opacity(0.15) : nil)
+                    ValueSnapshotListEntryView(
+                        snapshot: value,
+                        horizontalSizeClass: horizontalSizeClass,
+                        onTap: { editingSnapshot = value }
+                    )
                     #if os(iOS)
                     .hoverEffect(.lift)
                     #endif
+                    .task(id: value.analysisState) {
+                        // Automatically trigger analysis when state is pendingAnalysis
+                        #if DEBUG
+                        if value.analysisState == .pendingAnalysis {
+                            print("🎯 .task triggered for snapshot in pendingAnalysis state")
+                        }
+                        #endif
+
+                        if value.analysisState == .pendingAnalysis {
+                            // Wait for UI to fully render and for user to see the row
+                            // This ensures the analyzing state is visible
+                            #if DEBUG
+                            print("⏱️ Waiting 2 seconds before starting analysis to ensure UI is visible...")
+                            #endif
+                            try? await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
+
+                            #if DEBUG
+                            print("🚀 Starting analysis now")
+                            #endif
+                            await analysisService.analyzeSnapshot(value, modelContext: modelContext)
+                        }
+                    }
                 }
             }
             .listStyle(.plain)
         }
     }
 
-    /// Individual row in the value history list
-    private func valueRow(for value: ValueSnapshot) -> some View {
-        ValueSnapshotListEntryView(snapshot: value, horizontalSizeClass: horizontalSizeClass)
-    }
 }
 
 #Preview {

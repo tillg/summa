@@ -6,7 +6,8 @@ Built for iOS.
 
 ## To dos
 
+* Syncing with iCloud" --> nasty error when not logged in
 * Have a nicer version of the spinner, maybe a curve that ius moving randomly
 * Automatically recognize the series to which a Screenshot belongs
 * Have a unit / currency per series
-* 
+

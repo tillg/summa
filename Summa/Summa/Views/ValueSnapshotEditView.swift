@@ -45,10 +45,9 @@ struct ValueSnapshotEditView: View {
             snapshot.value = value
             snapshot.series = selectedSeries
 
-            // Mark as completed if it was pending
-            if snapshot.state == .pending {
-                snapshot.state = .completed
-            }
+            // Mark as humanConfirmed - user has opened edit view and validated data
+            snapshot.analysisState = .humanConfirmed
+            snapshot.dataSource = .human
 
             // Handle image update
             if let selectedImage = selectedImage,
@@ -61,12 +60,13 @@ struct ValueSnapshotEditView: View {
                 snapshot.imageAttachedDate = nil
             }
         } else {
-            // Create new snapshot
+            // Create new snapshot (manual entry, not from screenshot)
             let valueSnapshot = ValueSnapshot(
                 on: date,
                 value: value,
                 series: selectedSeries,
-                processingState: .completed
+                analysisState: .humanConfirmed,
+                dataSource: .human
             )
 
             // Add image if selected
@@ -310,7 +310,7 @@ struct ValueSnapshotEditView: View {
                     if let snapshot = snapshot {
                         // Editing existing snapshot
                         date = snapshot.date
-                        value = snapshot.value ?? 0  // Default to 0 if nil (pending state)
+                        value = snapshot.value ?? 0  // Default to 0 if nil (analysis state)
                         selectedSeries = snapshot.series
                         existingImageData = snapshot.sourceImage
 

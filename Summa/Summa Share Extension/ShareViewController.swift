@@ -119,15 +119,13 @@ class ShareViewController: UIViewController {
             return
         }
 
-        // Create new pending snapshot
-        let snapshot = ValueSnapshot(
-            on: Date(),
-            value: nil,  // No value yet - pending state
-            series: nil,
-            processingState: .pending
-        )
-        snapshot.sourceImage = imageData
-        snapshot.imageAttachedDate = Date()
+        // Create new snapshot from screenshot - will trigger analysis in main app
+        let snapshot = ValueSnapshot.fromScreenshot(imageData, date: Date())
+
+        #if DEBUG
+        print("📤 Share Extension: Created snapshot with state: \(snapshot.analysisState)")
+        print("📤 Share Extension: Has image data: \(snapshot.sourceImage != nil)")
+        #endif
 
         // Insert and save on background thread
         Task {
@@ -135,6 +133,10 @@ class ShareViewController: UIViewController {
                 let context = modelContainer.mainContext
                 context.insert(snapshot)
                 try context.save()
+
+                #if DEBUG
+                print("📤 Share Extension: Snapshot saved to SwiftData")
+                #endif
 
                 await MainActor.run {
                     self.completeRequest(success: true)

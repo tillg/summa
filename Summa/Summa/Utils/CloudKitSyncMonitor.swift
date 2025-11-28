@@ -29,6 +29,7 @@ class CloudKitSyncMonitor {
     }
 
     var lastError: Error?
+    var lastImportDate: Date?  // Tracks when last import completed
 
     init() {
         // If we've already completed initial sync in a previous app launch, start as synced
@@ -81,6 +82,9 @@ class CloudKitSyncMonitor {
             print("☁️ CloudKit: Import event - \(statusText)")
             #endif
             if event.succeeded {
+                // Update last import timestamp to trigger view refreshes
+                lastImportDate = Date()
+
                 // Initial import completed successfully
                 if syncState != .synced {
                     #if DEBUG
