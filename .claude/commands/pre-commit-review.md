@@ -74,5 +74,5 @@ Provide:
 3. Recommendations for improvements
 4. Priority level (High/Medium/Low) for each issue
 
-Don't modify any files, just produce a report.C
+Don't modify any files, just produce a report.
 If everything looks good, simply state: "✅ Code review passed - ready to commit"

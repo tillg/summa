@@ -11,7 +11,7 @@ import CoreGraphics
 /// Contains the complete analysis results for an image
 public struct AnalyzedImage {
     /// The original image that was analyzed
-    public let originalImage: IAPlatformImage
+    public let originalImage: PlatformImage
 
     /// Text recognition results with priority scoring
     public let textResults: [TextRecognitionResult]
@@ -26,7 +26,7 @@ public struct AnalyzedImage {
     public let imageSize: CGSize
 
     public init(
-        originalImage: IAPlatformImage,
+        originalImage: PlatformImage,
         textResults: [TextRecognitionResult],
         faceResults: [FaceRecognitionResult],
         objectResults: [ObjectRecognitionResult],

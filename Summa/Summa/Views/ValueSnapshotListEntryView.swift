@@ -118,16 +118,8 @@ struct ValueSnapshotListEntryView: View {
 
     private var regularLayoutContent: some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text(snapshot.date.formatted(date: .abbreviated, time: .shortened))
-                    .lineLimit(1)
-
-                #if DEBUG
-                Text("[\(stateDebugName)]")
-                    .font(.caption2)
-                    .foregroundColor(.purple)
-                #endif
-            }
+            Text(snapshot.date.formatted(date: .abbreviated, time: .shortened))
+                .lineLimit(1)
 
             HStack {
                 if let series = snapshot.series {
@@ -145,34 +137,13 @@ struct ValueSnapshotListEntryView: View {
         }
     }
 
-    #if DEBUG
-    private var stateDebugName: String {
-        switch snapshot.analysisState {
-        case .pendingAnalysis: return "PENDING"
-        case .analyzing: return "ANALYZING"
-        case .analysisCompletePartial: return "PARTIAL"
-        case .analysisCompleteFull: return "FULL"
-        case .analysisFailed: return "FAILED"
-        case .humanConfirmed: return "HUMAN"
-        }
-    }
-    #endif
-
     // MARK: - Compact Layout (iPhone)
 
     private var compactLayoutContent: some View {
         VStack(alignment: .leading, spacing: 2) {
-            HStack {
-                Text(snapshot.date.formatted(date: .abbreviated, time: .shortened))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.85)
-
-                #if DEBUG
-                Text("[\(stateDebugName)]")
-                    .font(.caption2)
-                    .foregroundColor(.purple)
-                #endif
-            }
+            Text(snapshot.date.formatted(date: .abbreviated, time: .shortened))
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
 
             HStack {
                 if let series = snapshot.series {

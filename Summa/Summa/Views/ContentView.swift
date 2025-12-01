@@ -139,7 +139,7 @@ struct ContentView: View {
             .onChange(of: syncMonitor.lastImportDate) { _, _ in
                 // Force UI refresh when CloudKit imports new data
                 #if DEBUG
-                print("🔄 CloudKit import detected, refreshing UI...")
+                log("CloudKit import detected, refreshing UI...")
                 #endif
             }
     }

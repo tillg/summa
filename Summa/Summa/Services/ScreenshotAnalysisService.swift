@@ -9,12 +9,6 @@ import Foundation
 import Observation
 import SwiftData
 
-#if canImport(UIKit)
-import UIKit
-#elseif canImport(AppKit)
-import AppKit
-#endif
-
 /// Configurable weights for monetary value detection algorithm
 struct DetectionWeights {
     let priorityWeight: Double = 0.4      // 40% - text size/prominence
@@ -45,13 +39,13 @@ final class ScreenshotAnalysisService {
     ///   - modelContext: SwiftData model context for persistence
     func analyzeSnapshot(_ snapshot: ValueSnapshot, modelContext: ModelContext) async {
         #if DEBUG
-        print("🔍 Starting analysis for snapshot: \(snapshot.date)")
+        log("Starting analysis for snapshot: \(snapshot.date)")
         #endif
 
         // Verify we have screenshot data
         guard let imageData = snapshot.sourceImage else {
             #if DEBUG
-            print("❌ No screenshot data available")
+            log("❌ No screenshot data available")
             #endif
             snapshot.analysisState = .analysisFailed
             snapshot.analysisError = "No screenshot data available"
@@ -60,7 +54,7 @@ final class ScreenshotAnalysisService {
         }
 
         #if DEBUG
-        print("📸 Screenshot data found: \(imageData.count) bytes")
+        log("Screenshot data found: \(imageData.count) bytes")
         #endif
 
         // Set analyzing state and record start time
@@ -69,7 +63,7 @@ final class ScreenshotAnalysisService {
         try? modelContext.save()
 
         #if DEBUG
-        print("✅ State set to ANALYZING, saved to database")
+        log("State set to ANALYZING, saved to database")
         #endif
 
         let analysisStartTime = Date()
@@ -78,22 +72,16 @@ final class ScreenshotAnalysisService {
         try? await Task.sleep(nanoseconds: 100_000_000)  // 0.1 second for UI refresh
 
         #if DEBUG
-        print("⏱️ DEBUG: Waiting 10 seconds to see analyzing state...")
+        log("DEBUG: Waiting 10 seconds to see analyzing state...")
         try? await Task.sleep(nanoseconds: 10_000_000_000)  // 10 second delay for UI feedback
-        print("✅ DEBUG: Delay complete, performing analysis now")
+        log("DEBUG: Delay complete, performing analysis now")
         #endif
 
         do {
             // Convert Data to platform image
-            #if canImport(UIKit)
-            guard let image = UIImage(data: imageData) else {
+            guard let image = PlatformImage.fromData(imageData) else {
                 throw AnalysisError.invalidImageData
             }
-            #else
-            guard let image = NSImage(data: imageData) else {
-                throw AnalysisError.invalidImageData
-            }
-            #endif
 
             // Perform Vision analysis
             await imageAnalysis.analyze(image: image)
@@ -124,12 +112,12 @@ final class ScreenshotAnalysisService {
                 if snapshot.series != nil {
                     snapshot.analysisState = .analysisCompleteFull
                     #if DEBUG
-                    print("✅ Analysis complete (FULL): value=\(result.value), series=\(snapshot.series?.name ?? "unknown")")
+                    log("DEBUG: Analysis complete (FULL): value=\(result.value), series=\(snapshot.series?.name ?? "unknown")")
                     #endif
                 } else {
                     snapshot.analysisState = .analysisCompletePartial
                     #if DEBUG
-                    print("⚠️ Analysis complete (PARTIAL): value=\(result.value), no series")
+                    log("DEBUG Analysis complete (PARTIAL): value=\(result.value), no series")
                     #endif
                 }
 
@@ -138,7 +126,7 @@ final class ScreenshotAnalysisService {
                 snapshot.analysisState = .analysisFailed
                 snapshot.analysisError = "No monetary value detected in screenshot"
                 #if DEBUG
-                print("❌ Analysis FAILED: No monetary value detected")
+                log("DEBUG: Analysis FAILED: No monetary value detected")
                 #endif
             }
 
@@ -158,7 +146,7 @@ final class ScreenshotAnalysisService {
         if elapsedTime < minimumAnalysisTime {
             let remainingTime = minimumAnalysisTime - elapsedTime
             #if DEBUG
-            print("⏱️ Analysis completed in \(String(format: "%.2f", elapsedTime))s, waiting \(String(format: "%.2f", remainingTime))s more for UI feedback...")
+            log("DEBUG Analysis completed in \(String(format: "%.2f", elapsedTime))s, waiting \(String(format: "%.2f", remainingTime))s more for UI feedback...")
             #endif
             try? await Task.sleep(nanoseconds: UInt64(remainingTime * 1_000_000_000))
         }

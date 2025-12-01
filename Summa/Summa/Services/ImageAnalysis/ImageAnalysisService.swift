@@ -9,11 +9,10 @@ import Foundation
 import Observation
 import ImageIO
 
-#if canImport(AppKit)
-import AppKit
-#endif
-#if canImport(UIKit)
+#if os(iOS)
 import UIKit
+#elseif os(macOS)
+import AppKit
 #endif
 
 /// Service for analyzing images with text recognition, face detection, and object classification
@@ -46,7 +45,7 @@ public final class ImageAnalysisService {
     /// Analyzes an image and updates the analyzedImage property
     /// - Parameter image: The image to analyze (UIImage on iOS, NSImage on macOS)
     @MainActor
-    public func analyze(image: IAPlatformImage) async {
+    public func analyze(image: PlatformImage) async {
         isAnalyzing = true
         error = nil
         analyzedImage = nil
@@ -57,25 +56,14 @@ public final class ImageAnalysisService {
                 .appendingPathComponent(UUID().uuidString)
                 .appendingPathExtension("jpg")
 
-            let jpegData: Data?
-            #if canImport(UIKit)
-            jpegData = image.jpegData(compressionQuality: 0.9)
-            #else
-            jpegData = image.ia_jpegData(compressionQuality: 0.9)
-            #endif
-
-            guard let imageData = jpegData else {
+            guard let imageData = image.jpegData(compressionQuality: 0.9) else {
                 throw ImageAnalysisError.imageProcessingFailed("Failed to convert image to JPEG")
             }
 
             try imageData.write(to: tempURL)
 
             // Get image orientation
-            #if canImport(UIKit)
-            let orientation = CGImagePropertyOrientation.ia_from(image.imageOrientation)
-            #else
-            let orientation = CGImagePropertyOrientation.up
-            #endif
+            let orientation = image.imagePropertyOrientation
 
             // Preprocess image
             let preprocessedURL = try await preprocessor.preprocess(imagePath: tempURL.path())
@@ -89,11 +77,7 @@ public final class ImageAnalysisService {
             )
 
             // Get image size
-            #if canImport(UIKit)
             let imageSize = image.size
-            #else
-            let imageSize = image.size
-            #endif
 
             // Convert to public API models
             let analyzed = try convertToAnalyzedImage(
@@ -126,7 +110,7 @@ public final class ImageAnalysisService {
     // MARK: - Private Helper Methods
 
     private func convertToAnalyzedImage(
-        image: IAPlatformImage,
+        image: PlatformImage,
         visionResults: IAVisionAnalyzer.AnalysisResults,
         imageSize: CGSize
     ) throws -> AnalyzedImage {

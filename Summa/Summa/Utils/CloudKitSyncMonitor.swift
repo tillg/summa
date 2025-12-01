@@ -71,7 +71,7 @@ class CloudKitSyncMonitor {
         switch event.type {
         case .setup:
             #if DEBUG
-            print("☁️ CloudKit: Setup event - \(statusText)")
+            log("DEBUG Setup event - \(statusText)")
             #endif
             if !event.succeeded {
                 lastError = event.error
@@ -79,7 +79,7 @@ class CloudKitSyncMonitor {
 
         case .import:
             #if DEBUG
-            print("☁️ CloudKit: Import event - \(statusText)")
+            log("DEBUG Import event - \(statusText)")
             #endif
             if event.succeeded {
                 // Update last import timestamp to trigger view refreshes
@@ -88,7 +88,7 @@ class CloudKitSyncMonitor {
                 // Initial import completed successfully
                 if syncState != .synced {
                     #if DEBUG
-                    print("✅ CloudKit: Initial sync completed")
+                    log("DEBUG Initial sync completed")
                     #endif
                     syncState = .synced
                     hasCompletedInitialSync = true
@@ -96,24 +96,24 @@ class CloudKitSyncMonitor {
             } else {
                 // Import failed
                 #if DEBUG
-                print("❌ CloudKit: Import failed - \(event.error?.localizedDescription ?? "unknown error")")
+                logError("DEBUG Import failed - \(event.error?.localizedDescription ?? "unknown error")")
                 #endif
                 lastError = event.error
             }
 
         case .export:
             #if DEBUG
-            print("☁️ CloudKit: Export event - \(statusText)")
+            log("DEBUG Export event - \(statusText)")
             #endif
             if !event.succeeded {
                 #if DEBUG
-                print("⚠️ CloudKit: Export failed - \(event.error?.localizedDescription ?? "unknown error")")
+                logError("DEBUG Export failed - \(event.error?.localizedDescription ?? "unknown error")")
                 #endif
             }
 
         @unknown default:
             #if DEBUG
-            print("☁️ CloudKit: Unknown event type")
+            log("DEBUG Unknown event type")
             #endif
         }
 
