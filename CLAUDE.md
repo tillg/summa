@@ -115,6 +115,32 @@ Swift files are organized in `Summa/Summa/` with the following structure:
 - CloudKit capabilities are configured in the Xcode project
 - Data is accessible across devices signed into the same iCloud account
 
+### CloudKit Configuration
+
+**Critical Setup (SummaApp.swift):**
+```swift
+let config = ModelConfiguration(
+    url: storeURL,
+    cloudKitDatabase: .private("iCloud.com.grtnr.Summa")
+)
+```
+
+**Platform-Specific Requirements:**
+- **iOS**: Works automatically with iCloud entitlements
+- **macOS**: Requires `com.apple.security.network.client` entitlement in `SummaDebug.entitlements` for App Sandbox network access
+- **Both platforms**: Must have Background Modes capability with Remote notifications enabled (configured in Info.plist)
+
+**Storage Considerations:**
+- Images stored directly in database (not `.externalStorage`)
+- CloudKit cannot automatically migrate between external and inline storage
+- If schema changes require migration, delete CloudKit data via CloudKit Console and local databases
+
+**Sync Behavior:**
+- Exports triggered by: app backgrounding, system timing (batched)
+- Imports triggered by: app launch, remote notifications
+- Setup/Import/Export events logged via `CloudKitSyncMonitor`
+- Failed events with retry are normal during startup
+
 ## Multiple Series Feature
 
 The app supports tracking multiple series (e.g., different accounts, portfolios, asset types):

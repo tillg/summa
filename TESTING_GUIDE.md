@@ -89,11 +89,35 @@ Quick test procedure to verify core functionality across iOS, iPad, and macOS.
 4. Verify: Series and all its snapshots are deleted
 5. Verify: Chart updates accordingly
 
-### 7. CloudKit Sync (Optional - requires iCloud)
-1. Add data on one device
-2. Wait 30 seconds
-3. Open app on another device signed into same iCloud account
-4. Verify: Data appears on second device
+### 7. CloudKit Sync (Critical - iOS ↔ macOS)
+**Setup:**
+- Ensure logged into same iCloud account on all devices
+- Delete local databases for fresh test:
+  - iOS Simulator: Delete app from simulator
+  - macOS: `rm -rf ~/Library/Group\ Containers/group.com.grtnr.Summa/Summa.sqlite*`
+
+**iOS to macOS Sync:**
+1. Launch iOS app first (creates fresh database)
+2. Add a manual entry (e.g., value: 1000)
+3. Background the app (swipe up/home button) - **triggers CloudKit export**
+4. Wait for log: `DEBUG Export succeeded`
+5. Launch macOS app
+6. Verify logs show:
+   - `Setup event - succeeded`
+   - `Import event - succeeded`
+7. Verify: iOS entry appears on macOS with correct value and series
+
+**macOS to iOS Sync:**
+1. Add entry on macOS
+2. Quit macOS app (triggers export)
+3. Launch iOS app
+4. Verify: macOS entry appears on iOS
+
+**Troubleshooting:**
+- If export fails: Check logs for CloudKit errors
+- If macOS fails: Verify network entitlement (`com.apple.security.network.client`) in SummaDebug.entitlements
+- Export timing: System controls when exports happen (may batch/delay)
+- Console visibility: Data may take 30-60 seconds to appear in CloudKit Console
 
 ## Expected Results
 - All CRUD operations work smoothly

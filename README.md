@@ -2,7 +2,15 @@
 
 Keeping track of my wealth across multiple bank accounts, stock accounts and other value stores. Dead simple, no API integration, simple, manual updates.
 
-Built for iOS.
+Built for iOS and macOS with iCloud sync.
+
+## Features
+
+* Multi-platform: iOS, iPad, macOS
+* iCloud sync via CloudKit
+* Automatic screenshot analysis with Vision framework
+* Multiple series tracking with color-coded charts
+* Share extension for quick data entry from screenshots
 
 ## To dos
 
