@@ -37,18 +37,18 @@ class SaveErrorHandler {
     static func save(_ context: ModelContext, operation: String) -> SaveResult {
         do {
             try context.save()
-            print("✅ Save successful: \(operation)")
+            log("Save successful: \(operation)")
             return .success
         } catch {
-            print("❌ Save failed: \(operation)")
-            print("   Error: \(error.localizedDescription)")
+            logError("Save failed: \(operation)")
+            log("   Error: \(error.localizedDescription)")
 
             // Log additional details for debugging
             if let nsError = error as NSError? {
-                print("   Domain: \(nsError.domain)")
-                print("   Code: \(nsError.code)")
+                log("   Domain: \(nsError.domain)")
+                log("   Code: \(nsError.code)")
                 if !nsError.userInfo.isEmpty {
-                    print("   UserInfo: \(nsError.userInfo)")
+                    log("   UserInfo: \(nsError.userInfo)")
                 }
             }
 

@@ -32,7 +32,7 @@ class ShareViewController: UIViewController {
         guard let appGroupURL = FileManager.default
             .containerURL(forSecurityApplicationGroupIdentifier: AppConstants.appGroupIdentifier) else {
             #if DEBUG
-            print("❌ ERROR: Failed to get App Group container")
+            logError("❌ ERROR: Failed to get App Group container")
             #endif
             throw NSError(
                 domain: "SummaShare",
@@ -44,7 +44,7 @@ class ShareViewController: UIViewController {
         let storeURL = appGroupURL.appending(path: AppConstants.databaseFileName)
 
         #if DEBUG
-        print("📁 SwiftData store location: \(storeURL.path)")
+        log("SwiftData store location: \(storeURL.path)")
         #endif
 
         let config = ModelConfiguration(url: storeURL)
@@ -55,7 +55,7 @@ class ShareViewController: UIViewController {
         )
 
         #if DEBUG
-        print("✅ ModelContainer created successfully in Share Extension")
+        log("ModelContainer created successfully in Share Extension")
         #endif
 
         return container
@@ -75,7 +75,7 @@ class ShareViewController: UIViewController {
 
                 if let error = error {
                     #if DEBUG
-                    print("Error loading image: \(error)")
+                    logError("Error loading image: \(error)")
                     #endif
                     DispatchQueue.main.async {
                         self.completeRequest(success: false)
@@ -113,7 +113,7 @@ class ShareViewController: UIViewController {
         // Ensure we have a valid model container
         guard let modelContainer = modelContainer else {
             #if DEBUG
-            print("❌ ERROR: ModelContainer not available")
+            logError("ERROR: ModelContainer not available")
             #endif
             completeRequest(success: false)
             return
@@ -123,8 +123,8 @@ class ShareViewController: UIViewController {
         let snapshot = ValueSnapshot.fromScreenshot(imageData, date: Date())
 
         #if DEBUG
-        print("📤 Share Extension: Created snapshot with state: \(snapshot.analysisState)")
-        print("📤 Share Extension: Has image data: \(snapshot.sourceImage != nil)")
+        log("Created snapshot with state: \(snapshot.analysisState)")
+        log("Has image data: \(snapshot.sourceImage != nil)")
         #endif
 
         // Insert and save on background thread
@@ -135,7 +135,7 @@ class ShareViewController: UIViewController {
                 try context.save()
 
                 #if DEBUG
-                print("📤 Share Extension: Snapshot saved to SwiftData")
+                log("Snapshot saved to SwiftData")
                 #endif
 
                 await MainActor.run {
@@ -143,7 +143,7 @@ class ShareViewController: UIViewController {
                 }
             } catch {
                 #if DEBUG
-                print("Error saving snapshot: \(error)")
+                logError("Error saving snapshot: \(error)")
                 #endif
                 await MainActor.run {
                     self.completeRequest(success: false)

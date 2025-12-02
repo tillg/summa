@@ -30,13 +30,13 @@ struct SummaApp: App {
         let storeURL = appGroupURL.appending(path: AppConstants.databaseFileName)
 
         #if DEBUG
-        print("📁 SwiftData store location: \(storeURL.path)")
+        log("SwiftData store location: \(storeURL.path)")
 
         // Check if database file exists
         if FileManager.default.fileExists(atPath: storeURL.path) {
-            print("✅ Database file exists at App Group location")
+            log("Database file exists at App Group location")
         } else {
-            print("⚠️ Database file does NOT exist yet (will be created)")
+            log("Database file does NOT exist yet (will be created)")
         }
         #endif
 
@@ -48,12 +48,12 @@ struct SummaApp: App {
                 configurations: config
             )
             #if DEBUG
-            print("✅ ModelContainer created successfully")
+            log("ModelContainer created successfully")
             #endif
             return container
         } catch {
             #if DEBUG
-            print("❌ ERROR creating ModelContainer: \(error)")
+            logError("❌ ERROR creating ModelContainer: \(error)")
             #endif
             fatalError("Could not create ModelContainer: \(error)")
         }

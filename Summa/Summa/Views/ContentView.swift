@@ -100,25 +100,25 @@ struct ContentView: View {
                 visibleSeriesIDs = Set(allSeries.map { $0.id })
 
                 #if DEBUG
-                // Debug: Print what data we have
-                print("📊 Total snapshots loaded: \(valueHistory.count)")
+                // Debug: Log what data we have
+                log("Total snapshots loaded: \(valueHistory.count)")
                 let pendingAnalysisCount = valueHistory.filter { $0.analysisState == .pendingAnalysis }.count
                 let analyzingCount = valueHistory.filter { $0.analysisState == .analyzing }.count
                 let partialCount = valueHistory.filter { $0.analysisState == .analysisCompletePartial }.count
                 let fullCount = valueHistory.filter { $0.analysisState == .analysisCompleteFull }.count
                 let failedCount = valueHistory.filter { $0.analysisState == .analysisFailed }.count
                 let completedCount = valueHistory.filter { $0.analysisState == .humanConfirmed }.count
-                print("   - Pending Analysis: \(pendingAnalysisCount)")
-                print("   - Analyzing: \(analyzingCount)")
-                print("   - Complete Partial: \(partialCount)")
-                print("   - Complete Full: \(fullCount)")
-                print("   - Failed: \(failedCount)")
-                print("   - Human Confirmed: \(completedCount)")
+                log("   - Pending Analysis: \(pendingAnalysisCount)")
+                log("   - Analyzing: \(analyzingCount)")
+                log("   - Complete Partial: \(partialCount)")
+                log("   - Complete Full: \(fullCount)")
+                log("   - Failed: \(failedCount)")
+                log("   - Human Confirmed: \(completedCount)")
 
                 if pendingAnalysisCount > 0 {
-                    print("🔍 Snapshots pending analysis:")
+                    log("Snapshots pending analysis:")
                     for snapshot in valueHistory.filter({ $0.analysisState == .pendingAnalysis }) {
-                        print("   - Date: \(snapshot.date), Has screenshot: \(snapshot.sourceImage != nil)")
+                        log("   - Date: \(snapshot.date), Has screenshot: \(snapshot.sourceImage != nil)")
                     }
                 }
                 #endif
@@ -239,7 +239,7 @@ struct ContentView: View {
                         // Automatically trigger analysis when state is pendingAnalysis
                         #if DEBUG
                         if value.analysisState == .pendingAnalysis {
-                            print("🎯 .task triggered for snapshot in pendingAnalysis state")
+                            log(".task triggered for snapshot in pendingAnalysis state")
                         }
                         #endif
 
@@ -247,12 +247,12 @@ struct ContentView: View {
                             // Wait for UI to fully render and for user to see the row
                             // This ensures the analyzing state is visible
                             #if DEBUG
-                            print("⏱️ Waiting 2 seconds before starting analysis to ensure UI is visible...")
+                            log("⏱️ Waiting 2 seconds before starting analysis to ensure UI is visible...")
                             #endif
                             try? await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
 
                             #if DEBUG
-                            print("🚀 Starting analysis now")
+                            log("Starting analysis now")
                             #endif
                             await analysisService.analyzeSnapshot(value, modelContext: modelContext)
                         }
