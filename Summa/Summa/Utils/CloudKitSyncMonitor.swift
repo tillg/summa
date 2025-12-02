@@ -72,6 +72,14 @@ class CloudKitSyncMonitor {
         case .setup:
             #if DEBUG
             log("DEBUG Setup event - \(statusText)")
+            if !event.succeeded {
+                if let error = event.error {
+                    logError("DEBUG Setup failed with error: \(error)")
+                    logError("DEBUG Setup error details: \(error.localizedDescription)")
+                } else {
+                    logError("DEBUG Setup failed with no error details")
+                }
+            }
             #endif
             if !event.succeeded {
                 lastError = event.error
@@ -104,12 +112,22 @@ class CloudKitSyncMonitor {
         case .export:
             #if DEBUG
             log("DEBUG Export event - \(statusText)")
-            #endif
             if !event.succeeded {
-                #if DEBUG
-                logError("DEBUG Export failed - \(event.error?.localizedDescription ?? "unknown error")")
-                #endif
+                if let error = event.error {
+                    logError("DEBUG Export failed with error: \(error)")
+                    logError("DEBUG Export error details: \(error.localizedDescription)")
+                    if let nsError = error as NSError? {
+                        logError("DEBUG Export error domain: \(nsError.domain)")
+                        logError("DEBUG Export error code: \(nsError.code)")
+                        logError("DEBUG Export error userInfo: \(nsError.userInfo)")
+                    }
+                } else {
+                    logError("DEBUG Export failed with no error details")
+                }
+            } else {
+                log("DEBUG Export succeeded")
             }
+            #endif
 
         @unknown default:
             #if DEBUG

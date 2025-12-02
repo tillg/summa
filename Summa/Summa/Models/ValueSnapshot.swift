@@ -36,7 +36,7 @@ class ValueSnapshot: Identifiable, Equatable, Hashable {
     var dataSourceRaw: String = DataSource.human.rawValue  // Store as String for SwiftData
 
     // Screenshot data
-    @Attribute(.externalStorage) var sourceImage: Data?  // Original screenshot stored externally
+    var sourceImage: Data?  // Original screenshot
     var imageAttachedDate: Date?  // When screenshot was added
 
     // Analysis metadata

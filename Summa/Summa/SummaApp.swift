@@ -40,7 +40,11 @@ struct SummaApp: App {
         }
         #endif
 
-        let config = ModelConfiguration(url: storeURL)
+        // Configure with CloudKit sync
+        let config = ModelConfiguration(
+            url: storeURL,
+            cloudKitDatabase: .private("iCloud.com.grtnr.Summa")
+        )
 
         do {
             let container = try ModelContainer(
@@ -48,7 +52,7 @@ struct SummaApp: App {
                 configurations: config
             )
             #if DEBUG
-            log("ModelContainer created successfully")
+            log("ModelContainer created successfully with CloudKit sync")
             #endif
             return container
         } catch {

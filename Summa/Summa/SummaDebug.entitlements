@@ -16,5 +16,7 @@
 	<array>
 		<string>group.com.grtnr.Summa</string>
 	</array>
+	<key>com.apple.security.network.client</key>
+	<true/>
 </dict>
 </plist>
