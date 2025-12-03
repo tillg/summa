@@ -8,6 +8,26 @@
 import Foundation
 import os.log
 
+// MARK: - Private Helpers
+
+/// Shared date formatter for timestamp generation
+private let timestampFormatter: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
+    formatter.timeZone = TimeZone.current
+    return formatter
+}()
+
+/// Extracts class name from file path
+/// - Parameter file: The file path (from #file)
+/// - Returns: The class/struct name (filename without .swift extension)
+private func extractClassName(from file: String) -> String {
+    let filename = (file as NSString).lastPathComponent
+    return filename.replacingOccurrences(of: ".swift", with: "")
+}
+
+// MARK: - Public Logging Functions
+
 /// Global logging function with timestamp and caller information
 /// - Parameters:
 ///   - message: The message to log
@@ -20,18 +40,8 @@ func log(
     file: String = #file,
     line: Int = #line
 ) {
-    let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
-    formatter.timeZone = TimeZone.current
-
-    let timestamp = formatter.string(from: Date())
-
-    // Extract just the filename without path
-    let filename = (file as NSString).lastPathComponent
-
-    // Extract the class/struct name if present in the filename
-    let className = filename.replacingOccurrences(of: ".swift", with: "")
-
+    let timestamp = timestampFormatter.string(from: Date())
+    let className = extractClassName(from: file)
     print("[\(timestamp)] [\(className).\(function):\(line)] \(message)")
 }
 
@@ -52,17 +62,8 @@ func logError(
     file: String = #file,
     line: Int = #line
 ) {
-    let formatter = DateFormatter()
-    formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
-    formatter.timeZone = TimeZone.current
-
-    let timestamp = formatter.string(from: Date())
-
-    // Extract just the filename without path
-    let filename = (file as NSString).lastPathComponent
-
-    // Extract the class/struct name if present in the filename
-    let className = filename.replacingOccurrences(of: ".swift", with: "")
+    let timestamp = timestampFormatter.string(from: Date())
+    let className = extractClassName(from: file)
 
     // Use OSLog which Xcode displays with color coding
     let formattedMessage = "[\(timestamp)] [\(className).\(function):\(line)] \(message)"

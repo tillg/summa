@@ -22,7 +22,7 @@ struct SummaApp: App {
         guard let appGroupURL = FileManager.default
             .containerURL(forSecurityApplicationGroupIdentifier: AppConstants.appGroupIdentifier) else {
             #if DEBUG
-            print("❌ ERROR: Failed to get App Group container")
+            logError("❌ ERROR: Failed to get App Group container")
             #endif
             fatalError("Failed to get App Group container")
         }
