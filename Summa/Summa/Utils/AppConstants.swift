@@ -56,6 +56,21 @@ enum AppConstants {
         static let maxCompressedSizeKB = 1024
     }
 
+    // MARK: - Analysis Configuration
+
+    enum Analysis {
+        /// Minimum time to show "analyzing" state for user feedback
+        /// Longer in DEBUG to observe UI states during development
+        #if DEBUG
+        static let minimumAnalysisTime: TimeInterval = 10.0
+        #else
+        static let minimumAnalysisTime: TimeInterval = 3.0
+        #endif
+
+        /// Initial UI refresh delay before starting analysis
+        static let uiRefreshDelay: TimeInterval = 0.1
+    }
+
     // MARK: - UI Configuration
 
     enum UI {

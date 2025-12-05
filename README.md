@@ -12,11 +12,35 @@ Built for iOS and macOS with iCloud sync.
 * Multiple series tracking with color-coded charts
 * Share extension for quick data entry from screenshots
 
+## Testing
+
+Summa includes automated unit tests for core business logic components.
+
+### Running Tests
+
+```bash
+# In Xcode: Press Cmd+U to run all tests
+
+# Or from command line:
+xcodebuild test -project Summa/Summa.xcodeproj -scheme Summa \
+  -destination 'platform=iOS Simulator,name=iPhone 15'
+```
+
+### Test Coverage
+
+Priority 1 tests (✅ implemented):
+
+* **ScreenshotAnalysisService**: Currency parsing, format assessment, symbol detection (40+ tests)
+* **SeriesManager**: Color utilities and hex conversion (15+ tests)
+* **SaveErrorHandler**: Error message generation for different error types (20+ tests)
+
+For detailed setup instructions and test configuration, see [TESTING_SETUP.md](TESTING_SETUP.md).
+
+For the complete testing roadmap, see [Specs/06_AUTOMATED_TESTS.md](Specs/06_AUTOMATED_TESTS.md).
+
 ## To dos
 
 * Syncing with iCloud" --> nasty error when not logged in
-* Automated tests
 * Have a nicer version of the spinner, maybe a curve that ius moving randomly
 * Automatically recognize the series to which a Screenshot belongs
 * Have a unit / currency per series
-

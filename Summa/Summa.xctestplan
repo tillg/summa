@@ -1,0 +1,30 @@
+{
+  "configurations" : [
+    {
+      "id" : "78139431-780B-4221-843E-15797490252C",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false,
+    "performanceAntipatternCheckerEnabled" : true,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:Summa.xcodeproj",
+      "identifier" : "F94BC4742E47204B00335382",
+      "name" : "Summa"
+    }
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:Summa.xcodeproj",
+        "identifier" : "F9D574CF2EE172EB004E50F1",
+        "name" : "SummaTests"
+      }
+    }
+  ],
+  "version" : 1
+}

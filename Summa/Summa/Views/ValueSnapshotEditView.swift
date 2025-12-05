@@ -319,9 +319,9 @@ struct ValueSnapshotEditView: View {
                         if let imageData = snapshot.sourceImage {
                             log("macOS: Image data exists, size: \(imageData.count) bytes")
                             if let image = PlatformImage.fromData(imageData) {
-                                log("macOS: Successfully created NSImage, size: \(image.size)")
+                                log("macOS: Successfully created PlatformImage, size: \(image.size)")
                             } else {
-                                logError("macOS: Failed to create NSImage from data")
+                                logError("macOS: Failed to create PlatformImage from data")
                             }
                         } else {
                             log("macOS: No image data in snapshot")

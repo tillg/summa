@@ -10,7 +10,7 @@ import Observation
 import SwiftData
 
 /// Configurable weights for monetary value detection algorithm
-struct DetectionWeights {
+internal struct DetectionWeights {
     let priorityWeight: Double = 0.4      // 40% - text size/prominence
     let confidenceWeight: Double = 0.3    // 30% - OCR confidence
     let currencySymbolWeight: Double = 0.2 // 20% - has currency symbol
@@ -69,13 +69,8 @@ final class ScreenshotAnalysisService {
         let analysisStartTime = Date()
 
         // Give UI time to update before continuing
-        try? await Task.sleep(nanoseconds: 100_000_000)  // 0.1 second for UI refresh
-
-        #if DEBUG
-        log("DEBUG: Waiting 10 seconds to see analyzing state...")
-        try? await Task.sleep(nanoseconds: 10_000_000_000)  // 10 second delay for UI feedback
-        log("DEBUG: Delay complete, performing analysis now")
-        #endif
+        let uiRefreshNanos = UInt64(AppConstants.Analysis.uiRefreshDelay * 1_000_000_000)
+        try? await Task.sleep(nanoseconds: uiRefreshNanos)
 
         do {
             // Convert Data to platform image
@@ -139,14 +134,14 @@ final class ScreenshotAnalysisService {
             snapshot.analysisError = error.localizedDescription
         }
 
-        // Ensure minimum 3 seconds in "analyzing" state for UI feedback
+        // Ensure minimum time in "analyzing" state for UI feedback
         let elapsedTime = Date().timeIntervalSince(analysisStartTime)
-        let minimumAnalysisTime: TimeInterval = 3.0
+        let minimumAnalysisTime = AppConstants.Analysis.minimumAnalysisTime
 
         if elapsedTime < minimumAnalysisTime {
             let remainingTime = minimumAnalysisTime - elapsedTime
             #if DEBUG
-            log("DEBUG Analysis completed in \(String(format: "%.2f", elapsedTime))s, waiting \(String(format: "%.2f", remainingTime))s more for UI feedback...")
+            log("Analysis completed in \(String(format: "%.2f", elapsedTime))s, waiting \(String(format: "%.2f", remainingTime))s more for UI feedback...")
             #endif
             try? await Task.sleep(nanoseconds: UInt64(remainingTime * 1_000_000_000))
         }
@@ -158,7 +153,7 @@ final class ScreenshotAnalysisService {
     // MARK: - Private Methods
 
     /// Result of monetary value detection
-    private struct DetectionResult {
+    internal struct DetectionResult {
         let value: Double
         let text: String
         let confidence: Float
@@ -199,7 +194,7 @@ final class ScreenshotAnalysisService {
     }
 
     /// Calculates combined score for a monetary value candidate
-    private func calculateScore(for result: TextRecognitionResult, value: Double) -> Double {
+    internal func calculateScore(for result: TextRecognitionResult, value: Double) -> Double {
         var score = 0.0
 
         // 1. Priority Score (0-1, lower priority number = higher score)
@@ -226,13 +221,13 @@ final class ScreenshotAnalysisService {
     }
 
     /// Detects if text contains a currency symbol
-    private func detectsCurrencySymbol(_ text: String) -> Bool {
+    internal func detectsCurrencySymbol(_ text: String) -> Bool {
         let currencyPattern = "[$€£¥₹₽¢₣₤₧₨₩₪₫₱₡₨₭₮₴₵₸₹₺₼₽₾₿]|\\b(USD|EUR|GBP|CHF|JPY|CNY|CAD|AUD|NZD)\\b"
         return text.range(of: currencyPattern, options: .regularExpression) != nil
     }
 
     /// Assesses the quality of number formatting
-    private func assessNumberFormat(_ text: String) -> Double {
+    internal func assessNumberFormat(_ text: String) -> Double {
         var score = 0.0
 
         // Has thousands separator (comma, dot, or apostrophe)
@@ -256,7 +251,7 @@ final class ScreenshotAnalysisService {
 
     /// Parses a currency string to extract numeric value
     /// Handles multiple formats: US ($1,234.56), European (1.234,56), Swiss (1'234.56)
-    private func parseCurrencyString(_ text: String) -> Double? {
+    internal func parseCurrencyString(_ text: String) -> Double? {
         var cleaned = text
 
         // Remove currency symbols

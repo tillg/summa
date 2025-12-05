@@ -43,7 +43,7 @@ public final class ImageAnalysisService {
     // MARK: - Public Methods
 
     /// Analyzes an image and updates the analyzedImage property
-    /// - Parameter image: The image to analyze (UIImage on iOS, NSImage on macOS)
+    /// - Parameter image: The image to analyze (PlatformImage)
     @MainActor
     public func analyze(image: PlatformImage) async {
         isAnalyzing = true
