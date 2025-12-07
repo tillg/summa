@@ -28,37 +28,7 @@ class ShareViewController: UIViewController {
     }
 
     private func createModelContainer() throws -> ModelContainer {
-        // Get App Group container URL
-        guard let appGroupURL = FileManager.default
-            .containerURL(forSecurityApplicationGroupIdentifier: AppConstants.appGroupIdentifier) else {
-            #if DEBUG
-            logError("❌ ERROR: Failed to get App Group container")
-            #endif
-            throw NSError(
-                domain: "SummaShare",
-                code: 1,
-                userInfo: [NSLocalizedDescriptionKey: "Failed to access App Group container"]
-            )
-        }
-
-        let storeURL = appGroupURL.appending(path: AppConstants.databaseFileName)
-
-        #if DEBUG
-        log("SwiftData store location: \(storeURL.path)")
-        #endif
-
-        let config = ModelConfiguration(url: storeURL)
-
-        let container = try ModelContainer(
-            for: ValueSnapshot.self, Series.self,
-            configurations: config
-        )
-
-        #if DEBUG
-        log("ModelContainer created successfully in Share Extension")
-        #endif
-
-        return container
+        return try ModelContainerFactory.createSharedContainer()
     }
 
     private func processSharedImage() {

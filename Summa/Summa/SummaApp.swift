@@ -18,43 +18,8 @@ struct SummaApp: App {
     @State private var showSyncError = false
 
     var sharedModelContainer: ModelContainer = {
-        // Get App Group container URL
-        guard let appGroupURL = FileManager.default
-            .containerURL(forSecurityApplicationGroupIdentifier: AppConstants.appGroupIdentifier) else {
-            #if DEBUG
-            logError("❌ ERROR: Failed to get App Group container")
-            #endif
-            fatalError("Failed to get App Group container")
-        }
-
-        let storeURL = appGroupURL.appending(path: AppConstants.databaseFileName)
-
-        #if DEBUG
-        log("SwiftData store location: \(storeURL.path)")
-
-        // Check if database file exists
-        if FileManager.default.fileExists(atPath: storeURL.path) {
-            log("Database file exists at App Group location")
-        } else {
-            log("Database file does NOT exist yet (will be created)")
-        }
-        #endif
-
-        // Configure with CloudKit sync
-        let config = ModelConfiguration(
-            url: storeURL,
-            cloudKitDatabase: .private("iCloud.com.grtnr.Summa")
-        )
-
         do {
-            let container = try ModelContainer(
-                for: ValueSnapshot.self, Series.self,
-                configurations: config
-            )
-            #if DEBUG
-            log("ModelContainer created successfully with CloudKit sync")
-            #endif
-            return container
+            return try ModelContainerFactory.createSharedContainer()
         } catch {
             #if DEBUG
             logError("❌ ERROR creating ModelContainer: \(error)")

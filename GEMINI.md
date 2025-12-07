@@ -1,205 +1,73 @@
-# Gemini Integration
+# GEMINI Project Context: Summa
 
-This document outlines how to interact with Gemini models within this project, covering the core `GeminiModel` class, the `Gemini` integration, and schema conversion utilities.
+This document provides a comprehensive overview of the Summa project, its architecture, and development conventions to be used as instructional context.
 
-## 1. GeminiModel Usage
+## 1. Project Overview
 
-The `GeminiModel` class provides a simplified interface for calling Gemini models, including support for parallel requests and retry logic.
+Summa is a personal finance tracking application for Apple platforms (iOS, iPadOS, and macOS). Its core purpose is to allow users to manually track their wealth across various accounts by creating "Value Snapshots" over time.
 
-### Initialization
+A key feature is the ability to create a `ValueSnapshot` from a screenshot. The app uses Apple's **Vision framework** to perform Optical Character Recognition (OCR) on the image and a sophisticated internal algorithm to identify and extract the most likely monetary value.
 
-You can initialize `GeminiModel` with various parameters:
+The application is built with a modern, native Apple technology stack:
 
-```python
-class GeminiModel:
-    def __init__(
-        self,
-        model_name: str = "gemini-2.0-flash-001",
-        finetuned_model: bool = False,
-        distribute_requests: bool = False,
-        cache_name: str | None = None,
-        temperature: float = 0.01,
-        **kwargs,
-    ):
-        # ...
-```
+*   **UI:** SwiftUI, with adaptive layouts for different screen sizes and platforms.
+*   **Data Persistence:** SwiftData.
+*   **Synchronization:** CloudKit, which syncs data across a user's devices using their iCloud account.
+*   **Core Logic:** Swift.
 
--   `model_name`: Specifies the Gemini model to use (default: "gemini-2.0-flash-001").
--   `finetuned_model`: Set to `True` if using a finetuned model.
--   `distribute_requests`: If `True` and not a finetuned model, requests might be distributed across different regions.
--   `cache_name`: Optional name for cached content.
--   `temperature`: Controls the randomness of the output (default: 0.01).
+## 2. Architecture
 
-### Making a Single Call
+The project follows a clean, service-oriented architecture that separates concerns effectively.
 
-Use the `call` method to send a single prompt to the Gemini model.
+*   **Models (`Summa/Models`):** Defines the core data structures using SwiftData's `@Model` macro. The key models are:
+    *   `Series`: Represents a category of values to track (e.g., a specific bank account). Each series has a name, color, and a collection of snapshots.
+    *   `ValueSnapshot`: Represents a single data point at a specific time, containing a value, a date, and optionally a source screenshot.
 
-```python
-    @retry(max_attempts=12, base_delay=2, backoff_factor=2)
-    def call(self, prompt: str, parser_func=None) -> str:
-        """Calls the Gemini model with the given prompt.
+*   **Views (`Summa/Views`):** Contains all SwiftUI views. The UI is component-based and reactive, using `@Environment` and `@Query` to access services and data.
+    *   `ContentView`: The main view of the app, which adapts its layout based on the device's horizontal size class.
+    *   `ValueSnapshotChart`: A view that visualizes the data.
+    *   `ValueSnapshotEditView`: A form for creating or editing entries.
 
-        Args:
-            prompt (str): The prompt to call the model with.
-            parser_func (callable, optional): A function that processes the LLM
-              output. It takes the model"s response as input and returns the
-              processed result.
+*   **Services (`Summa/Services`):** Encapsulates business logic, making it reusable and testable.
+    *   `ScreenshotAnalysisService`: The brain of the app. It contains the pipeline and algorithm for analyzing screenshots, extracting text, and parsing monetary values. It is highly robust, handling various international currency formats.
+    *   `ImageAnalysisService`: A lower-level service that acts as a wrapper for the Vision framework to perform OCR.
+    *   `CloudKitSyncMonitor`: Monitors the status of CloudKit synchronization and provides feedback to the UI.
 
-        Returns:
-            str: The processed response from the model.
-        """
-        # ...
-```
+*   **Managers (`Summa/Utils/SeriesManager.swift`):** The `SeriesManager` is a singleton that provides utility functions and manages the `Series` data, such as creating the default series.
 
-Example:
+*   **App Extension (`Summa Share Extension`):** A lightweight share extension that allows users to send images directly to Summa from other apps (like Photos). It creates a `ValueSnapshot` in a "pending" state in the shared SwiftData container, and the main app processes it later. This is a smart decoupling that keeps the extension fast and reliable.
 
-```python
-from your_module import GeminiModel
+## 3. Building, Running, and Testing
 
-gemini_model = GeminiModel(model_name="gemini-1.5-flash")
-response = gemini_model.call("Tell me a story about a brave knight.")
-print(response)
+The project is a standard Xcode project.
 
-def custom_parser(text):
-    return text.upper()
+### Building & Running
 
-response_parsed = gemini_model.call("Hello world", parser_func=custom_parser)
-print(response_parsed) # HELLO WORLD
-```
+*   **Xcode:** The primary method is to open `Summa/Summa.xcodeproj` in Xcode and press the "Run" button (Cmd+R). You will need to select a target device or simulator (e.g., iPhone 15).
+*   **Command Line:** You can build the project from the command line using `xcodebuild`.
+    ```bash
+    xcodebuild build -project Summa/Summa.xcodeproj -scheme Summa -destination 'platform=iOS Simulator,name=iPhone 15 Pro'
+    ```
 
-### Making Parallel Calls
+### Testing
 
-For multiple prompts, use `call_parallel` to send them concurrently with retry logic.
+The project has a suite of unit tests located in the `SummaTests` directory.
 
-```python
-    def call_parallel(
-        self,
-        prompts: List[str],
-        parser_func: Optional[Callable[[str], str]] = None,
-        timeout: int = 60,
-        max_retries: int = 5,
-    ) -> List[Optional[str]]:
-        """Calls the Gemini model for multiple prompts in parallel using threads with retry logic.
+*   **Xcode:** Press **Cmd+U** to run all tests.
+*   **Command Line:** Use the `xcodebuild test` command.
+    ```bash
+    xcodebuild test -project Summa/Summa.xcodeproj -scheme Summa -destination 'platform=iOS Simulator,name=iPhone 15 Pro'
+    ```
+*   **Convenience Script:** A shell script `clean_and_test.sh` is provided to clean the build folder, build the project, and run the tests in one step.
+    ```bash
+    ./clean_and_test.sh
+    ```
 
-        Args:
-            prompts (List[str]): A list of prompts to call the model with.
-            parser_func (callable, optional): A function to process each response.
-            timeout (int): The maximum time (in seconds) to wait for each thread.
-            max_retries (int): The maximum number of retries for timed-out threads.
+## 4. Development Conventions
 
-        Returns:
-            List[Optional[str]]:
-            A list of responses, or None for threads that failed.
-        """
-        # ...
-```
-
-Example:
-
-```python
-from your_module import GeminiModel
-
-gemini_model = GeminiModel(model_name="gemini-1.5-flash")
-prompts = [
-    "What is the capital of France?",
-    "Who painted the Mona Lisa?",
-    "What is 2+2?"
-]
-responses = gemini_model.call_parallel(prompts)
-for i, res in enumerate(responses):
-    print(f"Prompt {i+1}: {prompts[i]} -> Response: {res}")
-```
-
-## 2. Gemini Integration (`Gemini` class)
-
-The `Gemini` class provides a more comprehensive integration with Gemini models, supporting asynchronous calls, streaming, and different API backends (Vertex AI, Gemini API).
-
-### Initialization
-
-```python
-class Gemini(BaseLlm):
-  """Integration for Gemini models.
-
-  Attributes:
-    model: The name of the Gemini model.
-  """
-  model: str = 'gemini-1.5-flash'
-  # ...
-```
-
-You can instantiate it directly, often configured with a default model.
-
-### Supported Models
-
-The `supported_models` method lists the patterns for models supported by this integration:
-
-```python
-  @staticmethod
-  @override
-  def supported_models() -> list[str]:
-    """Provides the list of supported models.
-
-    Returns:
-      A list of supported models.
-    """
-    return [
-        r'gemini-.*',
-        # fine-tuned vertex endpoint pattern
-        r'projects\/.+\/locations\/.+\/endpoints\/.+',
-        # vertex gemini long name
-        r'projects\/.+\/locations\/.+\/publishers\/google\/models\/gemini.+',
-    ]
-```
-
-This includes generic Gemini models, finetuned Vertex AI endpoints, and Vertex Gemini long names.
-
-### Asynchronous Content Generation
-
-The `generate_content_async` method handles asynchronous requests, with an option for streaming responses.
-
-```python
-  async def generate_content_async(
-      self, llm_request: LlmRequest, stream: bool = False
-  ) -> AsyncGenerator[LlmResponse, None]:
-    """Sends a request to the Gemini model.
-
-    Args:
-      llm_request: LlmRequest, the request to send to the Gemini model.
-      stream: bool = False, whether to do streaming call.
-
-    Yields:
-      LlmResponse: The model response.
-    """
-    # ...
-```
-
-This method is designed for more advanced use cases where `LlmRequest` and `LlmResponse` objects are used, and streaming might be desired.
-
-## 3. Schema Conversion Utilities
-
-The project includes functions to convert between Gemini `Schema` objects and JSON Schema dictionaries.
-
-### `gemini_to_json_schema`
-
-Converts a Gemini `Schema` object to a JSON Schema dictionary.
-
-```python
-def gemini_to_json_schema(gemini_schema: Schema) -> Dict[str, Any]:
-  """Converts a Gemini Schema object into a JSON Schema dictionary."""
-  # ...
-```
-
-### `_to_gemini_schema`
-
-Converts an OpenAPI schema dictionary to a Gemini `Schema` object.
-
-```python
-def _to_gemini_schema(openapi_schema: dict[str, Any]) -> Schema:
-  """Converts an OpenAPI schema dictionary to a Gemini Schema object."""
-  # ...
-```
-
-These utilities are crucial for defining and validating data structures when working with tools and function calling capabilities of Gemini models.
-
----
-This document provides a high-level overview. For detailed usage, refer to the source code of `GeminiModel`, `Gemini`, and the schema conversion functions.
+*   **SwiftUI & SwiftData:** The project fully embraces modern, declarative development with SwiftUI for the UI and SwiftData for the data layer. Asynchronous operations are handled using `async/await` and `.task` modifiers in SwiftUI.
+*   **Dependency Injection:** Services like `ScreenshotAnalysisService` and `CloudKitSyncMonitor` are injected into the SwiftUI `Environment`, making them available to any view that needs them.
+*   **Platform-Specific Code:** The code uses `#if os(macOS)` compiler directives to handle differences between iOS and macOS, especially for UI elements like menu commands and window management.
+*   **Data Sharing:** An **App Group** is used to create a shared container, allowing both the main app and the Share Extension to access the same SwiftData database file. This is configured in `SummaApp.swift` and `ShareViewController.swift`.
+*   **Testing:** Unit tests are written using XCTest. The tests are focused, descriptive, and cover edge cases, indicating a high standard for code quality. The use of `@testable import Summa` is standard practice for accessing `internal` components from the test target.
+*   **Logging:** A custom `log()` and `logError()` function are used for debug logging, often wrapped in `#if DEBUG` blocks to ensure they don't ship in release builds.

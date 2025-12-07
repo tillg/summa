@@ -45,7 +45,7 @@
 		F94BC4752E47204B00335382 /* Summa.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Summa.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F97186D62ECC8CBA00AE1AD7 /* Summa Share Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Summa Share Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F9D574D02EE172EB004E50F1 /* SummaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SummaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		F9D6FE5C2EE18CDA00E93398 /* Summa.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = file; path = Summa.xctestplan; sourceTree = "<group>"; };
+		F9D6FE5C2EE18CDA00E93398 /* Summa.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Summa.xctestplan; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -63,6 +63,7 @@
 				Models/ValueSnapshot.swift,
 				Utils/AppConstants.swift,
 				Utils/Logger.swift,
+				Utils/ModelContainerFactory.swift,
 				Utils/SeriesManager.swift,
 			);
 			target = F97186D52ECC8CBA00AE1AD7 /* Summa Share Extension */;
