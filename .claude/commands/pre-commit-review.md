@@ -49,6 +49,7 @@ Verify:
 - Proper use of SwiftData relationships
 - Check against Specs/BEST_PRACTICE_*.md
 - View have reasonable #Preview s
+- Make sure to check all the aspects covered in ../BEST_PRACTICES/GUIDE_FROM_PAUL_HUDSON.md
 
 ## 7. Documentation
 

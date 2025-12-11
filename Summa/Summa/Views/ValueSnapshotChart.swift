@@ -26,11 +26,11 @@ struct ValueSnapshotChart: View {
 
     private var valuesToDraw: [ValueSnapshot] {
         valueHistory.filter { snapshot in
-            guard let date = snapshot.date else { return false }  // Filter out snapshots without dates
+            guard let date = snapshot.date,
+                  let series = snapshot.series,
+                  snapshot.value != nil else { return false }
             return date >= selectedPeriod &&
-            snapshot.series != nil &&
-            snapshot.value != nil &&  // Only show snapshots with values
-            visibleSeriesIDs.contains(snapshot.series!.id)
+            visibleSeriesIDs.contains(series.id)
         }
         .sorted()
     }
