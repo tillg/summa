@@ -596,3 +596,86 @@ process:com.grtnr.Summa.ShareExtension-macOS
 ## Architecture Decision (by Till)
 
 (To be filled in after review)
+
+---
+
+## Implementation Status (December 11, 2025)
+
+### ✅ iOS Share Extension - WORKING
+
+**Status:** Fully functional with CloudKit sync from closed app
+
+**Key Implementation Details:**
+- Uses `UIViewController` with `MainInterface.storyboard`
+- Calls `ModelContainerFactory.createSharedContainer()` (with CloudKit)
+- Has CloudKit entitlements (`iCloud.com.grtnr.Summa`, CloudKit services)
+- Has App Group entitlement (`group.com.grtnr.Summa`)
+- **Critical fix:** Added 0.5s delay after `context.save()` to give CloudKit time to schedule export before extension closes
+- Saves to shared App Group database, syncs to CloudKit automatically
+- Data appears on other devices within seconds without opening main app
+
+**Test Results:**
+- ✅ Share from Photos while app is open → syncs immediately
+- ✅ Share from Photos while app is closed → syncs to CloudKit, appears on iPad automatically
+- ✅ Gemini analysis triggers automatically on other devices
+
+### ❌ macOS Share Extension - NOT WORKING
+
+**Status:** Extension appears in share menu but code never executes
+
+**What Works:**
+- ✅ Extension appears in macOS Photos share menu
+- ✅ Extension target builds successfully
+- ✅ Extension is embedded in app bundle
+- ✅ Extension is registered with system (`pluginkit` shows it enabled)
+- ✅ Has correct entitlements (CloudKit, App Groups, App Sandbox, Network Client)
+- ✅ Has correct Info.plist configuration
+- ✅ Has MainInterface.storyboard in Base.lproj
+- ✅ ShareViewController is set as custom class in storyboard
+- ✅ All shared files (models, utils) have target membership
+
+**What Doesn't Work:**
+- ❌ No logs appear in Console (with 🍎 prefix)
+- ❌ No file-based debug logs created
+- ❌ viewDidLoad never called
+- ❌ No UI appears when share target is selected
+- ❌ No data saved to database
+- ❌ No crashes or errors - just silent failure
+
+**Debugging Attempts:**
+1. Created fresh extension target from scratch
+2. Tried both `NSViewController` and `SLComposeServiceViewController` base classes
+3. Tried with and without storyboard/XIB files
+4. Verified all entitlements match working iOS configuration
+5. Verified storyboard properly configured with ShareViewController custom class
+6. Deleted derived data multiple times
+7. Killed extension processes (pluginkit, sharingd)
+8. Verified extension is in Compile Sources and Copy Bundle Resources build phases
+9. Attempted to attach Xcode debugger (blocked by macOS security)
+10. Added comprehensive file-based logging (never executed)
+
+**Current Configuration:**
+- Base class: `SLComposeServiceViewController` (Apple's standard share UI)
+- Storyboard: `MainInterface.storyboard` in `Base.lproj`
+- Info.plist: `NSExtensionMainStoryboard = "MainInterface"`, `NSExtensionPrincipalClass = "$(PRODUCT_MODULE_NAME).ShareViewController"`
+- Module name: `Summa_Share_Extension_macOS`
+- Bundle ID: `com.grtnr.Summa.Summa-Share-Extension-macOS`
+
+**Hypothesis:**
+The extension process starts (because it appears in the share menu), but macOS is not instantiating the ShareViewController class. This could be due to:
+- Storyboard not properly loading the view controller
+- Module/class name resolution failure
+- Code signing/sandbox issue preventing class instantiation
+- Unknown Xcode project configuration corruption
+
+**Next Steps to Try:**
+1. Create completely new Xcode project from scratch and migrate code
+2. Try vanilla Xcode-generated macOS share extension template first (before customization)
+3. Check if there are additional macOS-specific requirements not documented
+4. File bug report with Apple if vanilla template also fails
+
+**Workaround:**
+For now, users can:
+- Use iOS device to share screenshots (works perfectly)
+- Manually add screenshots on Mac via the main app
+- macOS app still works for viewing/managing data synced from iOS

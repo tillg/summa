@@ -7,24 +7,25 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		F954905E2EE6BE31009BDEFA /* Summa Share Extension (macOS).appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F95490522EE6BE31009BDEFA /* Summa Share Extension (macOS).appex */; platformFilters = (macos, ); settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		F97186E02ECC8CBA00AE1AD7 /* Summa Share Extension (iOS).appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F97186D62ECC8CBA00AE1AD7 /* Summa Share Extension (iOS).appex */; platformFilter = ios; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		F98597282EEAD81A00D37A16 /* Summa Share Extension macOS.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F985971C2EEAD81A00D37A16 /* Summa Share Extension macOS.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		F98597522EEB23EF00D37A16 /* ShareViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = F98597502EEB23EF00D37A16 /* ShareViewController.xib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		F954905C2EE6BE31009BDEFA /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = F94BC46D2E47204B00335382 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = F95490512EE6BE31009BDEFA;
-			remoteInfo = "Summa Share Extension (macOS)";
-		};
 		F97186DE2ECC8CBA00AE1AD7 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F94BC46D2E47204B00335382 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = F97186D52ECC8CBA00AE1AD7;
 			remoteInfo = "Summa Share Extension";
+		};
+		F98597262EEAD81A00D37A16 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F94BC46D2E47204B00335382 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F985971B2EEAD81A00D37A16;
+			remoteInfo = "Summa Share Extension macOS";
 		};
 		F9D574D42EE172EB004E50F1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -42,8 +43,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				F954905E2EE6BE31009BDEFA /* Summa Share Extension (macOS).appex in Embed Foundation Extensions */,
 				F97186E02ECC8CBA00AE1AD7 /* Summa Share Extension (iOS).appex in Embed Foundation Extensions */,
+				F98597282EEAD81A00D37A16 /* Summa Share Extension macOS.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -52,32 +53,14 @@
 
 /* Begin PBXFileReference section */
 		F94BC4752E47204B00335382 /* Summa.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Summa.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		F95490522EE6BE31009BDEFA /* Summa Share Extension (macOS).appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Summa Share Extension (macOS).appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F97186D62ECC8CBA00AE1AD7 /* Summa Share Extension (iOS).appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Summa Share Extension (iOS).appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F985971C2EEAD81A00D37A16 /* Summa Share Extension macOS.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Summa Share Extension macOS.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F98597512EEB23EF00D37A16 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = "Summa Share Extension macOS/Base.lproj/ShareViewController.xib"; sourceTree = "<group>"; };
 		F9D574D02EE172EB004E50F1 /* SummaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SummaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F9D6FE5C2EE18CDA00E93398 /* Summa.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Summa.xctestplan; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		F95490622EE6BE31009BDEFA /* Exceptions for "Summa Share Extension (macOS)" folder in "Summa Share Extension (macOS)" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = F95490512EE6BE31009BDEFA /* Summa Share Extension (macOS) */;
-		};
-		F95490632EE6BE32009BDEFA /* Exceptions for "Summa" folder in "Summa Share Extension (macOS)" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Models/Series.swift,
-				Models/ValueSnapshot.swift,
-				Utils/AppConstants.swift,
-				Utils/Logger.swift,
-				Utils/ModelContainerFactory.swift,
-				Utils/SeriesManager.swift,
-			);
-			target = F95490512EE6BE31009BDEFA /* Summa Share Extension (macOS) */;
-		};
 		F97186E72ECC8CBA00AE1AD7 /* Exceptions for "Summa Share Extension iOS" folder in "Summa Share Extension (iOS)" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -97,6 +80,26 @@
 			);
 			target = F97186D52ECC8CBA00AE1AD7 /* Summa Share Extension (iOS) */;
 		};
+		F985972C2EEAD81A00D37A16 /* Exceptions for "Summa Share Extension macOS" folder in "Summa Share Extension macOS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"/Localized: MainInterface.storyboard",
+				Info.plist,
+			);
+			target = F985971B2EEAD81A00D37A16 /* Summa Share Extension macOS */;
+		};
+		F98597332EEAE2E200D37A16 /* Exceptions for "Summa" folder in "Summa Share Extension macOS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Models/Series.swift,
+				Models/ValueSnapshot.swift,
+				Utils/AppConstants.swift,
+				Utils/Logger.swift,
+				Utils/ModelContainerFactory.swift,
+				Utils/SeriesManager.swift,
+			);
+			target = F985971B2EEAD81A00D37A16 /* Summa Share Extension macOS */;
+		};
 		F9F7B4242EC390840059E1CA /* Exceptions for "Summa" folder in "Summa" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -112,17 +115,9 @@
 			exceptions = (
 				F9F7B4242EC390840059E1CA /* Exceptions for "Summa" folder in "Summa" target */,
 				F97186E82ECC8F9300AE1AD7 /* Exceptions for "Summa" folder in "Summa Share Extension (iOS)" target */,
-				F95490632EE6BE32009BDEFA /* Exceptions for "Summa" folder in "Summa Share Extension (macOS)" target */,
+				F98597332EEAE2E200D37A16 /* Exceptions for "Summa" folder in "Summa Share Extension macOS" target */,
 			);
 			path = Summa;
-			sourceTree = "<group>";
-		};
-		F95490532EE6BE31009BDEFA /* Summa Share Extension (macOS) */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				F95490622EE6BE31009BDEFA /* Exceptions for "Summa Share Extension (macOS)" folder in "Summa Share Extension (macOS)" target */,
-			);
-			path = "Summa Share Extension (macOS)";
 			sourceTree = "<group>";
 		};
 		F97186D72ECC8CBA00AE1AD7 /* Summa Share Extension iOS */ = {
@@ -131,6 +126,14 @@
 				F97186E72ECC8CBA00AE1AD7 /* Exceptions for "Summa Share Extension iOS" folder in "Summa Share Extension (iOS)" target */,
 			);
 			path = "Summa Share Extension iOS";
+			sourceTree = "<group>";
+		};
+		F985971D2EEAD81A00D37A16 /* Summa Share Extension macOS */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F985972C2EEAD81A00D37A16 /* Exceptions for "Summa Share Extension macOS" folder in "Summa Share Extension macOS" target */,
+			);
+			path = "Summa Share Extension macOS";
 			sourceTree = "<group>";
 		};
 		F9D574D12EE172EB004E50F1 /* SummaTests */ = {
@@ -148,14 +151,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		F954904F2EE6BE31009BDEFA /* Frameworks */ = {
+		F97186D32ECC8CBA00AE1AD7 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		F97186D32ECC8CBA00AE1AD7 /* Frameworks */ = {
+		F98597192EEAD81A00D37A16 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -175,11 +178,12 @@
 		F94BC46C2E47204B00335382 = {
 			isa = PBXGroup;
 			children = (
+				F98597502EEB23EF00D37A16 /* ShareViewController.xib */,
 				F9D6FE5C2EE18CDA00E93398 /* Summa.xctestplan */,
 				F94BC4772E47204B00335382 /* Summa */,
 				F97186D72ECC8CBA00AE1AD7 /* Summa Share Extension iOS */,
 				F9D574D12EE172EB004E50F1 /* SummaTests */,
-				F95490532EE6BE31009BDEFA /* Summa Share Extension (macOS) */,
+				F985971D2EEAD81A00D37A16 /* Summa Share Extension macOS */,
 				F94BC4762E47204B00335382 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -190,7 +194,7 @@
 				F94BC4752E47204B00335382 /* Summa.app */,
 				F97186D62ECC8CBA00AE1AD7 /* Summa Share Extension (iOS).appex */,
 				F9D574D02EE172EB004E50F1 /* SummaTests.xctest */,
-				F95490522EE6BE31009BDEFA /* Summa Share Extension (macOS).appex */,
+				F985971C2EEAD81A00D37A16 /* Summa Share Extension macOS.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -211,7 +215,7 @@
 			);
 			dependencies = (
 				F97186DF2ECC8CBA00AE1AD7 /* PBXTargetDependency */,
-				F954905D2EE6BE31009BDEFA /* PBXTargetDependency */,
+				F98597272EEAD81A00D37A16 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				F94BC4772E47204B00335382 /* Summa */,
@@ -222,28 +226,6 @@
 			productName = Summa;
 			productReference = F94BC4752E47204B00335382 /* Summa.app */;
 			productType = "com.apple.product-type.application";
-		};
-		F95490512EE6BE31009BDEFA /* Summa Share Extension (macOS) */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = F95490612EE6BE31009BDEFA /* Build configuration list for PBXNativeTarget "Summa Share Extension (macOS)" */;
-			buildPhases = (
-				F954904E2EE6BE31009BDEFA /* Sources */,
-				F954904F2EE6BE31009BDEFA /* Frameworks */,
-				F95490502EE6BE31009BDEFA /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				F95490532EE6BE31009BDEFA /* Summa Share Extension (macOS) */,
-			);
-			name = "Summa Share Extension (macOS)";
-			packageProductDependencies = (
-			);
-			productName = "Summa Share Extension (macOS)";
-			productReference = F95490522EE6BE31009BDEFA /* Summa Share Extension (macOS).appex */;
-			productType = "com.apple.product-type.app-extension";
 		};
 		F97186D52ECC8CBA00AE1AD7 /* Summa Share Extension (iOS) */ = {
 			isa = PBXNativeTarget;
@@ -265,6 +247,28 @@
 			);
 			productName = "Summa Share Extension";
 			productReference = F97186D62ECC8CBA00AE1AD7 /* Summa Share Extension (iOS).appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		F985971B2EEAD81A00D37A16 /* Summa Share Extension macOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F98597292EEAD81A00D37A16 /* Build configuration list for PBXNativeTarget "Summa Share Extension macOS" */;
+			buildPhases = (
+				F98597182EEAD81A00D37A16 /* Sources */,
+				F98597192EEAD81A00D37A16 /* Frameworks */,
+				F985971A2EEAD81A00D37A16 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				F985971D2EEAD81A00D37A16 /* Summa Share Extension macOS */,
+			);
+			name = "Summa Share Extension macOS";
+			packageProductDependencies = (
+			);
+			productName = "Summa Share Extension macOS";
+			productReference = F985971C2EEAD81A00D37A16 /* Summa Share Extension macOS.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 		F9D574CF2EE172EB004E50F1 /* SummaTests */ = {
@@ -303,11 +307,12 @@
 					F94BC4742E47204B00335382 = {
 						CreatedOnToolsVersion = 26.0;
 					};
-					F95490512EE6BE31009BDEFA = {
-						CreatedOnToolsVersion = 26.1.1;
-					};
 					F97186D52ECC8CBA00AE1AD7 = {
 						CreatedOnToolsVersion = 26.1.1;
+					};
+					F985971B2EEAD81A00D37A16 = {
+						CreatedOnToolsVersion = 26.1.1;
+						LastSwiftMigration = 2610;
 					};
 					F9D574CF2EE172EB004E50F1 = {
 						CreatedOnToolsVersion = 26.1.1;
@@ -321,6 +326,8 @@
 			knownRegions = (
 				en,
 				Base,
+				"Base 2",
+				"base 2",
 			);
 			mainGroup = F94BC46C2E47204B00335382;
 			minimizedProjectReferenceProxies = 1;
@@ -332,7 +339,7 @@
 				F94BC4742E47204B00335382 /* Summa */,
 				F97186D52ECC8CBA00AE1AD7 /* Summa Share Extension (iOS) */,
 				F9D574CF2EE172EB004E50F1 /* SummaTests */,
-				F95490512EE6BE31009BDEFA /* Summa Share Extension (macOS) */,
+				F985971B2EEAD81A00D37A16 /* Summa Share Extension macOS */,
 			);
 		};
 /* End PBXProject section */
@@ -342,17 +349,18 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F98597522EEB23EF00D37A16 /* ShareViewController.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		F95490502EE6BE31009BDEFA /* Resources */ = {
+		F97186D42ECC8CBA00AE1AD7 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		F97186D42ECC8CBA00AE1AD7 /* Resources */ = {
+		F985971A2EEAD81A00D37A16 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -376,14 +384,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		F954904E2EE6BE31009BDEFA /* Sources */ = {
+		F97186D22ECC8CBA00AE1AD7 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		F97186D22ECC8CBA00AE1AD7 /* Sources */ = {
+		F98597182EEAD81A00D37A16 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -400,19 +408,16 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		F954905D2EE6BE31009BDEFA /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			platformFilters = (
-				macos,
-			);
-			target = F95490512EE6BE31009BDEFA /* Summa Share Extension (macOS) */;
-			targetProxy = F954905C2EE6BE31009BDEFA /* PBXContainerItemProxy */;
-		};
 		F97186DF2ECC8CBA00AE1AD7 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			platformFilter = ios;
 			target = F97186D52ECC8CBA00AE1AD7 /* Summa Share Extension (iOS) */;
 			targetProxy = F97186DE2ECC8CBA00AE1AD7 /* PBXContainerItemProxy */;
+		};
+		F98597272EEAD81A00D37A16 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F985971B2EEAD81A00D37A16 /* Summa Share Extension macOS */;
+			targetProxy = F98597262EEAD81A00D37A16 /* PBXContainerItemProxy */;
 		};
 		F9D574D52EE172EB004E50F1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -420,6 +425,17 @@
 			targetProxy = F9D574D42EE172EB004E50F1 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		F98597502EEB23EF00D37A16 /* ShareViewController.xib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				F98597512EEB23EF00D37A16 /* Base */,
+			);
+			name = ShareViewController.xib;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		F94BC47E2E47204C00335382 /* Debug */ = {
@@ -593,6 +609,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 67P25VJ33Z;
@@ -627,73 +644,6 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
-		F954905F2EE6BE31009BDEFA /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = "Summa Share Extension (macOS)/Summa Share Extension macOSDebug.entitlements";
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 67P25VJ33Z;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Summa Share Extension (macOS)/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "Summa Share Extension (macOS)";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@executable_path/../../../../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 15.4;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.grtnr.Summa.ShareExtension-macOS";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-				SKIP_INSTALL = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Debug;
-		};
-		F95490602EE6BE31009BDEFA /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 67P25VJ33Z;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Summa Share Extension (macOS)/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "Summa Share Extension (macOS)";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-					"@executable_path/../../../../Frameworks",
-				);
-				MACOSX_DEPLOYMENT_TARGET = 15.4;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.grtnr.Summa.ShareExtension-macOS";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
-				SKIP_INSTALL = YES;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
-				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
@@ -765,6 +715,99 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		F985972A2EEAD81A00D37A16 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = "Summa Share Extension macOS/Summa Share Extension macOS.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 67P25VJ33Z;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Summa Share Extension macOS/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Summa Share Extension macOS";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.grtnr.Summa.Summa-Share-Extension-macOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		F985972B2EEAD81A00D37A16 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = "Summa Share Extension macOS/Summa Share Extension macOS.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 67P25VJ33Z;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Summa Share Extension macOS/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Summa Share Extension macOS";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.grtnr.Summa.Summa-Share-Extension-macOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
@@ -851,20 +894,20 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		F95490612EE6BE31009BDEFA /* Build configuration list for PBXNativeTarget "Summa Share Extension (macOS)" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				F954905F2EE6BE31009BDEFA /* Debug */,
-				F95490602EE6BE31009BDEFA /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		F97186E12ECC8CBA00AE1AD7 /* Build configuration list for PBXNativeTarget "Summa Share Extension (iOS)" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F97186E22ECC8CBA00AE1AD7 /* Debug */,
 				F97186E32ECC8CBA00AE1AD7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F98597292EEAD81A00D37A16 /* Build configuration list for PBXNativeTarget "Summa Share Extension macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F985972A2EEAD81A00D37A16 /* Debug */,
+				F985972B2EEAD81A00D37A16 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

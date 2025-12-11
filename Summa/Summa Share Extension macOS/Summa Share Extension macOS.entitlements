@@ -2,13 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- App Group for sharing SwiftData database -->
-	<key>com.apple.security.application-groups</key>
-	<array>
-		<string>group.com.grtnr.Summa</string>
-	</array>
-
-	<!-- CloudKit for data sync -->
+	<key>com.apple.developer.aps-environment</key>
+	<string>development</string>
 	<key>com.apple.developer.icloud-container-identifiers</key>
 	<array>
 		<string>iCloud.com.grtnr.Summa</string>
@@ -17,12 +12,12 @@
 	<array>
 		<string>CloudKit</string>
 	</array>
-
-	<!-- macOS-specific: App Sandbox -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.grtnr.Summa</string>
+	</array>
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
-
-	<!-- macOS-specific: Network access for CloudKit -->
 	<key>com.apple.security.network.client</key>
 	<true/>
 </dict>
