@@ -17,8 +17,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "F97186D52ECC8CBA00AE1AD7"
-               BuildableName = "Summa Share Extension.appex"
-               BlueprintName = "Summa Share Extension"
+               BuildableName = "Summa Share Extension (iOS).appex"
+               BlueprintName = "Summa Share Extension (iOS)"
                ReferencedContainer = "container:Summa.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>

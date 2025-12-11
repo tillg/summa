@@ -1,14 +1,13 @@
 //
 //  ShareViewController.swift
-//  Summa Share Extension
+//  Summa Share Extension (macOS)
 //
 
-import UIKit
-import Social
+import AppKit
 import UniformTypeIdentifiers
 import SwiftData
 
-class ShareViewController: UIViewController {
+class ShareViewController: NSViewController {
 
     // Access shared SwiftData container via App Group
     private var modelContainer: ModelContainer?
@@ -19,16 +18,14 @@ class ShareViewController: UIViewController {
 
         // Initialize model container
         do {
-            modelContainer = try createModelContainer()
+            // Use extension container (local-only, no CloudKit sync)
+            // Per Apple TN3164: Extensions should not sync - let main app handle CloudKit
+            modelContainer = try ModelContainerFactory.createExtensionContainer()
             processSharedImage()
         } catch {
             containerError = error
             showErrorAndDismiss(message: "Unable to access Summa database. Please ensure the app is properly installed.")
         }
-    }
-
-    private func createModelContainer() throws -> ModelContainer {
-        return try ModelContainerFactory.createSharedContainer()
     }
 
     private func processSharedImage() {
@@ -58,8 +55,10 @@ class ShareViewController: UIViewController {
 
                 if let url = item as? URL {
                     imageData = try? Data(contentsOf: url)
-                } else if let image = item as? UIImage {
-                    imageData = image.jpegData(compressionQuality: 0.8)
+                } else if let image = item as? NSImage,
+                          let tiffData = image.tiffRepresentation,
+                          let bitmap = NSBitmapImageRep(data: tiffData) {
+                    imageData = bitmap.representation(using: .jpeg, properties: [.compressionFactor: 0.8])
                 } else if let data = item as? Data {
                     imageData = data
                 }
@@ -108,6 +107,10 @@ class ShareViewController: UIViewController {
                 log("Snapshot saved to SwiftData")
                 #endif
 
+                // Give CloudKit a moment to schedule the export before extension closes
+                // Per Apple TN3164: Exports are triggered by system, may need brief delay
+                try? await Task.sleep(for: .seconds(0.5))
+
                 await MainActor.run {
                     self.completeRequest(success: true)
                 }
@@ -126,12 +129,15 @@ class ShareViewController: UIViewController {
         DispatchQueue.main.async {
             if success {
                 // Show brief success message
-                let alert = UIAlertController(
-                    title: "Saved to Summa",
-                    message: "Screenshot ready to process",
-                    preferredStyle: .alert
-                )
-                self.present(alert, animated: true) {
+                let alert = NSAlert()
+                alert.messageText = "Saved to Summa"
+                alert.informativeText = "Screenshot ready to process"
+                alert.alertStyle = .informational
+                alert.addButton(withTitle: "OK")
+
+                // Show alert in a modal-like way
+                alert.beginSheetModal(for: self.view.window!) { _ in
+                    // Complete after showing alert
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         self.extensionContext?.completeRequest(returningItems: nil)
                     }
@@ -144,19 +150,29 @@ class ShareViewController: UIViewController {
 
     private func showErrorAndDismiss(message: String) {
         DispatchQueue.main.async {
-            let alert = UIAlertController(
-                title: "Error",
-                message: message,
-                preferredStyle: .alert
-            )
-            alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+            let alert = NSAlert()
+            alert.messageText = "Error"
+            alert.informativeText = message
+            alert.alertStyle = .critical
+            alert.addButton(withTitle: "OK")
+
+            if let window = self.view.window {
+                alert.beginSheetModal(for: window) { _ in
+                    self.extensionContext?.cancelRequest(withError: NSError(
+                        domain: "SummaShare",
+                        code: 2,
+                        userInfo: [NSLocalizedDescriptionKey: message]
+                    ))
+                }
+            } else {
+                // Fallback if no window
+                alert.runModal()
                 self.extensionContext?.cancelRequest(withError: NSError(
                     domain: "SummaShare",
                     code: 2,
                     userInfo: [NSLocalizedDescriptionKey: message]
                 ))
-            })
-            self.present(alert, animated: true)
+            }
         }
     }
 }
