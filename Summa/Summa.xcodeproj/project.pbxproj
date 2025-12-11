@@ -633,7 +633,7 @@
 		F954905F2EE6BE31009BDEFA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = "Summa Share Extension macOS/Summa Share Extension macOSDebug.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "Summa Share Extension (macOS)/Summa Share Extension macOSDebug.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -642,7 +642,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Summa Share Extension macOS/Info.plist";
+				INFOPLIST_FILE = "Summa Share Extension (macOS)/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Summa Share Extension (macOS)";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -675,7 +675,7 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Summa Share Extension macOS/Info.plist";
+				INFOPLIST_FILE = "Summa Share Extension (macOS)/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Summa Share Extension (macOS)";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (

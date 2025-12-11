@@ -2,40 +2,195 @@
 //  ShareViewController.swift
 //  Summa Share Extension (macOS)
 //
-//  Created by Till Gartner on 08.12.25.
-//
 
-import Cocoa
+import AppKit
+import UniformTypeIdentifiers
+import SwiftData
+
+// Extension-specific logging prefix
+private func extLog(_ message: String) {
+    log("🍎 [macOS-EXT] \(message)")
+}
+
+private func extLogError(_ message: String) {
+    logError("🍎 [macOS-EXT] \(message)")
+}
 
 class ShareViewController: NSViewController {
 
-    override var nibName: NSNib.Name? {
-        return NSNib.Name("ShareViewController")
+    // Access shared SwiftData container via App Group
+    private var modelContainer: ModelContainer?
+    private var containerError: Error?
+
+    // MARK: - Lifecycle
+
+    override init(nibName nibNameOrNil: NSNib.Name?, bundle nibBundleOrNil: Bundle?) {
+        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+        extLog("🚀 ShareViewController INIT called")
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        extLog("🚀 ShareViewController INIT (coder) called")
     }
 
     override func loadView() {
-        super.loadView()
-    
-        // Insert code here to customize the view
-        let item = self.extensionContext!.inputItems[0] as! NSExtensionItem
-        if let attachments = item.attachments {
-            NSLog("Attachments = %@", attachments as NSArray)
-        } else {
-            NSLog("No Attachments")
+        // Create a simple view - we don't need UI, extension runs in background
+        self.view = NSView()
+        self.view.wantsLayer = true
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        #if DEBUG
+        extLog("=== macOS Share Extension viewDidLoad START ===")
+        #endif
+
+        // Initialize model container
+        do {
+            #if DEBUG
+            extLog("Attempting to create model container...")
+            #endif
+
+            modelContainer = try ModelContainerFactory.createSharedContainer()
+
+            #if DEBUG
+            extLog("Model container created successfully")
+            #endif
+
+            processSharedImage()
+        } catch {
+            #if DEBUG
+            extLogError("FATAL ERROR creating model container: \(error)")
+            #endif
+
+            containerError = error
+            showErrorAndDismiss(message: "Unable to access Summa database: \(error.localizedDescription)")
         }
     }
 
-    @IBAction func send(_ sender: AnyObject?) {
-        let outputItem = NSExtensionItem()
-        // Complete implementation by setting the appropriate value on the output item
-    
-        let outputItems = [outputItem]
-        self.extensionContext!.completeRequest(returningItems: outputItems, completionHandler: nil)
-}
+    private func processSharedImage() {
+        guard let extensionItem = extensionContext?.inputItems.first as? NSExtensionItem,
+              let itemProvider = extensionItem.attachments?.first else {
+            completeRequest(success: false)
+            return
+        }
 
-    @IBAction func cancel(_ sender: AnyObject?) {
-        let cancelError = NSError(domain: NSCocoaErrorDomain, code: NSUserCancelledError, userInfo: nil)
-        self.extensionContext!.cancelRequest(withError: cancelError)
+        // Check if it's an image
+        if itemProvider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
+            itemProvider.loadItem(forTypeIdentifier: UTType.image.identifier) { [weak self] (item, error) in
+                guard let self = self else { return }
+
+                if let error = error {
+                    #if DEBUG
+                    extLogError("Error loading image: \(error)")
+                    #endif
+                    DispatchQueue.main.async {
+                        self.completeRequest(success: false)
+                    }
+                    return
+                }
+
+                // Get image data
+                var imageData: Data?
+
+                if let url = item as? URL {
+                    imageData = try? Data(contentsOf: url)
+                } else if let image = item as? NSImage,
+                          let tiffData = image.tiffRepresentation,
+                          let bitmap = NSBitmapImageRep(data: tiffData) {
+                    imageData = bitmap.representation(using: .jpeg, properties: [.compressionFactor: 0.8])
+                } else if let data = item as? Data {
+                    imageData = data
+                }
+
+                guard let imageData = imageData else {
+                    DispatchQueue.main.async {
+                        self.completeRequest(success: false)
+                    }
+                    return
+                }
+
+                // Create pending snapshot
+                self.createPendingSnapshot(with: imageData)
+            }
+        } else {
+            completeRequest(success: false)
+        }
     }
 
+    private func createPendingSnapshot(with imageData: Data) {
+        // Ensure we have a valid model container
+        guard let modelContainer = modelContainer else {
+            #if DEBUG
+            extLogError("ERROR: ModelContainer not available")
+            #endif
+            completeRequest(success: false)
+            return
+        }
+
+        // Create new snapshot from screenshot - will trigger analysis in main app
+        let snapshot = ValueSnapshot.fromScreenshot(imageData, date: Date())
+
+        #if DEBUG
+        extLog("Created snapshot with state: \(snapshot.analysisState)")
+        extLog("Has image data: \(snapshot.sourceImage != nil)")
+        #endif
+
+        // Insert and save on background thread
+        Task {
+            do {
+                let context = modelContainer.mainContext
+                context.insert(snapshot)
+                try context.save()
+
+                #if DEBUG
+                extLog("Snapshot saved to SwiftData")
+                #endif
+
+                // Give CloudKit a moment to schedule the export before extension closes
+                // Per Apple TN3164: Exports are triggered by system, may need brief delay
+                try? await Task.sleep(for: .seconds(0.5))
+
+                await MainActor.run {
+                    self.completeRequest(success: true)
+                }
+            } catch {
+                #if DEBUG
+                extLogError("Error saving snapshot: \(error)")
+                #endif
+                await MainActor.run {
+                    self.completeRequest(success: false)
+                }
+            }
+        }
+    }
+
+    private func completeRequest(success: Bool) {
+        DispatchQueue.main.async {
+            #if DEBUG
+            extLog("completeRequest called with success=\(success)")
+            #endif
+
+            if success {
+                // Just complete immediately - alerts in extensions can be problematic
+                self.extensionContext?.completeRequest(returningItems: nil)
+            } else {
+                self.extensionContext?.cancelRequest(withError: NSError(domain: "SummaShare", code: -1))
+            }
+        }
+    }
+
+    private func showErrorAndDismiss(message: String) {
+        DispatchQueue.main.async {
+            #if DEBUG
+            extLogError("showErrorAndDismiss: \(message)")
+            #endif
+
+            // Just cancel - don't try to show UI in extension
+            let error = NSError(domain: "SummaShare", code: -1, userInfo: [NSLocalizedDescriptionKey: message])
+            self.extensionContext?.cancelRequest(withError: error)
+        }
+    }
 }
