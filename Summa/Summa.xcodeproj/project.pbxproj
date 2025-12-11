@@ -91,6 +91,7 @@
 				Models/Series.swift,
 				Models/ValueSnapshot.swift,
 				Utils/AppConstants.swift,
+				Utils/ImageMetadataExtractor.swift,
 				Utils/Logger.swift,
 				Utils/ModelContainerFactory.swift,
 				Utils/SeriesManager.swift,

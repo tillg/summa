@@ -25,9 +25,9 @@ enum DataSource: String, Codable {
 }
 
 @Model
-class ValueSnapshot: Identifiable, Equatable, Hashable {
+class ValueSnapshot: Identifiable, Equatable, Hashable, Comparable {
     var id: UUID = UUID()
-    var date: Date = Date.now
+    var date: Date? = Date.now  // Optional - nil indicates date unknown
     var value: Double? = 0.0  // Optional to support pending state
     var series: Series?
 
@@ -57,7 +57,7 @@ class ValueSnapshot: Identifiable, Equatable, Hashable {
         set { dataSourceRaw = newValue.rawValue }
     }
 
-    init(on: Date, value: Double?, series: Series? = nil, analysisState: AnalysisState = .humanConfirmed, dataSource: DataSource = .human) {
+    init(on: Date?, value: Double?, series: Series? = nil, analysisState: AnalysisState = .humanConfirmed, dataSource: DataSource = .human) {
         self.id = UUID()
         self.date = on
         self.value = value
@@ -67,7 +67,7 @@ class ValueSnapshot: Identifiable, Equatable, Hashable {
     }
 
     /// Creates a snapshot from a screenshot that needs analysis
-    static func fromScreenshot(_ imageData: Data, date: Date = Date()) -> ValueSnapshot {
+    static func fromScreenshot(_ imageData: Data, date: Date? = nil) -> ValueSnapshot {
         let snapshot = ValueSnapshot(on: date, value: nil, series: nil, analysisState: .pendingAnalysis, dataSource: .robot)
         snapshot.sourceImage = imageData
         snapshot.imageAttachedDate = Date()
@@ -75,7 +75,10 @@ class ValueSnapshot: Identifiable, Equatable, Hashable {
     }
 
     static func < (lhs: ValueSnapshot, rhs: ValueSnapshot) -> Bool {
-        lhs.date < rhs.date
+        // Handle nil dates by treating them as distant past (sort to beginning)
+        let lhsDate = lhs.date ?? Date.distantPast
+        let rhsDate = rhs.date ?? Date.distantPast
+        return lhsDate < rhsDate
     }
     static func == (lhs: ValueSnapshot, rhs: ValueSnapshot) -> Bool {
         lhs.id == rhs.id

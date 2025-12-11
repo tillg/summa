@@ -26,6 +26,7 @@ struct ValueSnapshotEditView: View {
     @State private var date = Date.now
     @State private var value: Double = 0
     @State private var selectedSeries: Series?
+    @State private var dateWasExtractedFromMetadata = true  // Track if date came from image metadata
 
     // Image attachment states
     @State private var selectedImage: PlatformImage?
@@ -122,7 +123,21 @@ struct ValueSnapshotEditView: View {
                     .keyboardType(.decimalPad)
                     #endif
 
-                DatePicker("Date", selection: $date)
+                HStack {
+                    DatePicker("Date", selection: $date)
+
+                    // Show info icon if date was not from metadata (estimated)
+                    if !dateWasExtractedFromMetadata {
+                        Image(systemName: "info.circle")
+                            .foregroundColor(.secondary)
+                            .help("Date estimated (no metadata found in image)")
+                            #if os(iOS)
+                            .onTapGesture {
+                                // On iOS, show tooltip via alert since .help() is macOS-only
+                            }
+                            #endif
+                    }
+                }
             }
 
             Section("Screenshot") {
@@ -309,7 +324,8 @@ struct ValueSnapshotEditView: View {
                 .onAppear {
                     if let snapshot = snapshot {
                         // Editing existing snapshot
-                        date = snapshot.date
+                        date = snapshot.date ?? Date.now  // Use current date if nil
+                        dateWasExtractedFromMetadata = snapshot.date != nil  // Track if date was available
                         value = snapshot.value ?? 0  // Default to 0 if nil (analysis state)
                         selectedSeries = snapshot.series
                         existingImageData = snapshot.sourceImage

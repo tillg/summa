@@ -118,7 +118,7 @@ struct ValueSnapshotListEntryView: View {
 
     private var regularLayoutContent: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(snapshot.date.formatted(date: .abbreviated, time: .shortened))
+            Text(snapshot.date?.formatted(date: .abbreviated, time: .shortened) ?? "Date unknown")
                 .lineLimit(1)
 
             HStack {
@@ -141,7 +141,7 @@ struct ValueSnapshotListEntryView: View {
 
     private var compactLayoutContent: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(snapshot.date.formatted(date: .abbreviated, time: .shortened))
+            Text(snapshot.date?.formatted(date: .abbreviated, time: .shortened) ?? "Date unknown")
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
 

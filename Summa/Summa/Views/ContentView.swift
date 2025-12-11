@@ -226,7 +226,7 @@ struct ContentView: View {
             Divider()
 
             List {
-                ForEach(valueHistory.sorted(by: { $0.date > $1.date }), id: \.self) { value in
+                ForEach(valueHistory.sorted(by: >), id: \.self) { value in
                     ValueSnapshotListEntryView(
                         snapshot: value,
                         horizontalSizeClass: horizontalSizeClass,

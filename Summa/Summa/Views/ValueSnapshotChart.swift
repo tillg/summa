@@ -26,12 +26,13 @@ struct ValueSnapshotChart: View {
 
     private var valuesToDraw: [ValueSnapshot] {
         valueHistory.filter { snapshot in
-            snapshot.date >= selectedPeriod &&
+            guard let date = snapshot.date else { return false }  // Filter out snapshots without dates
+            return date >= selectedPeriod &&
             snapshot.series != nil &&
             snapshot.value != nil &&  // Only show snapshots with values
             visibleSeriesIDs.contains(snapshot.series!.id)
         }
-        .sorted { $0.date < $1.date }
+        .sorted()
     }
 
     private var minValueToDraw: Double {
@@ -46,7 +47,7 @@ struct ValueSnapshotChart: View {
     private func snapshotsForSeries(_ series: Series) -> [ValueSnapshot] {
         valuesToDraw
             .filter { $0.series?.id == series.id }
-            .sorted { $0.date < $1.date }
+            .sorted()
     }
 
     var body: some View {
@@ -65,9 +66,9 @@ struct ValueSnapshotChart: View {
                             !snapshotsForSeries(series).isEmpty
                         }) { series in
                             ForEach(snapshotsForSeries(series)) { snapshot in
-                                if let value = snapshot.value {
+                                if let value = snapshot.value, let date = snapshot.date {
                                     LineMark(
-                                        x: .value("Date", snapshot.date),
+                                        x: .value("Date", date),
                                         y: .value("Value", value),
                                         series: .value("Series", series.name)
                                     )

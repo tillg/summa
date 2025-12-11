@@ -53,15 +53,20 @@ class ShareViewController: UIViewController {
                     return
                 }
 
-                // Get image data
+                // Extract date and image data
                 var imageData: Data?
+                var extractedDate: Date?
 
                 if let url = item as? URL {
+                    // Extract date from metadata BEFORE loading image data
+                    extractedDate = ImageMetadataExtractor.extractDate(from: url)
                     imageData = try? Data(contentsOf: url)
                 } else if let image = item as? UIImage {
                     imageData = image.jpegData(compressionQuality: 0.8)
+                    // Can't extract date from UIImage, leave as nil
                 } else if let data = item as? Data {
                     imageData = data
+                    // Can't extract date from raw Data, leave as nil
                 }
 
                 guard let imageData = imageData else {
@@ -71,15 +76,15 @@ class ShareViewController: UIViewController {
                     return
                 }
 
-                // Create pending snapshot
-                self.createPendingSnapshot(with: imageData)
+                // Create pending snapshot with extracted date
+                self.createPendingSnapshot(with: imageData, date: extractedDate)
             }
         } else {
             completeRequest(success: false)
         }
     }
 
-    private func createPendingSnapshot(with imageData: Data) {
+    private func createPendingSnapshot(with imageData: Data, date: Date?) {
         // Ensure we have a valid model container
         guard let modelContainer = modelContainer else {
             #if DEBUG
@@ -90,7 +95,8 @@ class ShareViewController: UIViewController {
         }
 
         // Create new snapshot from screenshot - will trigger analysis in main app
-        let snapshot = ValueSnapshot.fromScreenshot(imageData, date: Date())
+        // Pass extracted date (may be nil if no metadata found)
+        let snapshot = ValueSnapshot.fromScreenshot(imageData, date: date)
 
         #if DEBUG
         log("Created snapshot with state: \(snapshot.analysisState)")
