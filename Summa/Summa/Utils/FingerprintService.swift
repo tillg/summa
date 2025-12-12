@@ -7,7 +7,12 @@
 
 import Foundation
 import Vision
+
+#if os(iOS)
 import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
 /// Service for generating visual fingerprints from screenshots
 class FingerprintService {
@@ -32,11 +37,21 @@ class FingerprintService {
         let startTime = Date()
         #endif
 
-        // Create UIImage from data
-        guard let image = UIImage(data: imageData),
-              let cgImage = image.cgImage else {
+        // Create platform image from data
+        guard let image = PlatformImage.fromData(imageData) else {
             throw FingerprintError.invalidImageData
         }
+
+        // Get CGImage from platform image
+        #if os(iOS)
+        guard let cgImage = image.cgImage else {
+            throw FingerprintError.invalidImageData
+        }
+        #elseif os(macOS)
+        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+            throw FingerprintError.invalidImageData
+        }
+        #endif
 
         #if DEBUG
         let imageLoadTime = Date().timeIntervalSince(startTime)
