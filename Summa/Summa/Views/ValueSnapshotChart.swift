@@ -56,7 +56,7 @@ struct ValueSnapshotChart: View {
             Group {
                 if valuesToDraw.isEmpty {
                     Text("No data for selected period")
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                         .frame(minHeight: AppConstants.Chart.minHeight)
                         .frame(maxHeight: .infinity)
                 } else {
@@ -100,7 +100,7 @@ struct ValueSnapshotChart: View {
                     if horizontalSizeClass != .compact {
                         Text("Series (tap to toggle)")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
 
                     // Use native SwiftUI layout instead of custom FlowLayout
@@ -122,7 +122,7 @@ struct ValueSnapshotChart: View {
 
                                         Text(series.name)
                                             .font(.caption)
-                                            .foregroundColor(visibleSeriesIDs.contains(series.id) ? .primary : .secondary)
+                                            .foregroundStyle(visibleSeriesIDs.contains(series.id) ? .primary : .secondary)
                                     }
                                     .padding(.horizontal, horizontalSizeClass == .compact ? 8 : 10)
                                     .padding(.vertical, horizontalSizeClass == .compact ? 4 : 6)

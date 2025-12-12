@@ -21,7 +21,7 @@ struct SeriesRowView: View {
             VStack(alignment: .leading) {
                 HStack {
                     Text(series.name)
-                        .foregroundColor(.primary)
+                        .foregroundStyle(.primary)
                     if series.isDefault {
                         Text("DEFAULT")
                             .font(.caption2)
@@ -29,8 +29,8 @@ struct SeriesRowView: View {
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(Color.blue.opacity(0.2))
-                            .foregroundColor(.blue)
-                            .cornerRadius(4)
+                            .foregroundStyle(.blue)
+                            .clipShape(.rect(cornerRadius: 4))
                     }
                 }
                 if let snapshots = series.snapshots,
@@ -38,15 +38,15 @@ struct SeriesRowView: View {
                    let value = latestSnapshot.value {
                     Text(value.formatted(.currency(code: Locale.current.currency?.identifier ?? "EUR")))
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
                 Text("\(series.snapshots?.count ?? 0) entries")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
             Spacer()
             Image(systemName: "chevron.right")
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
         }
     }
 }

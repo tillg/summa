@@ -233,7 +233,7 @@ public struct IAImageOverlayView: View {
         // Draw text
         let text = Text("P\(priority)")
             .font(.system(size: 12, weight: .semibold))
-            .foregroundColor(.white)
+            .foregroundStyle(.white)
 
         context.draw(text, at: CGPoint(x: badgeX + badgeWidth / 2, y: badgeY + badgeHeight / 2))
     }

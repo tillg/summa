@@ -107,7 +107,7 @@ struct ValueSnapshotEditView: View {
                     }
                 } else {
                     Text("No series available")
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -122,14 +122,19 @@ struct ValueSnapshotEditView: View {
 
                     // Show info icon if date was not from metadata (estimated)
                     if !dateWasExtractedFromMetadata {
+                        #if os(iOS)
+                        // Note: Empty button - could implement tooltip alert in future
+                        Button {
+                            // On iOS, show tooltip via alert since .help() is macOS-only
+                        } label: {
+                            Image(systemName: "info.circle")
+                                .foregroundStyle(.secondary)
+                        }
+                        #else
                         Image(systemName: "info.circle")
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                             .help("Date estimated (no metadata found in image)")
-                            #if os(iOS)
-                            .onTapGesture {
-                                // On iOS, show tooltip via alert since .help() is macOS-only
-                            }
-                            #endif
+                        #endif
                     }
                 }
             }
@@ -143,13 +148,13 @@ struct ValueSnapshotEditView: View {
                             .resizable()
                             .scaledToFit()
                             .frame(maxHeight: 200)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .clipShape(.rect(cornerRadius: 8))
                         #elseif os(macOS)
                         Image(nsImage: selectedImage)
                             .resizable()
                             .scaledToFit()
                             .frame(maxHeight: 400)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .clipShape(.rect(cornerRadius: 8))
                         #endif
 
                         HStack(spacing: 12) {
@@ -189,7 +194,7 @@ struct ValueSnapshotEditView: View {
                                 .resizable()
                                 .scaledToFit()
                                 .frame(maxHeight: 200)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .clipShape(.rect(cornerRadius: 8))
                         }
                         #elseif os(macOS)
                         if let nsImage = PlatformImage.fromData(existingImageData) {
@@ -205,12 +210,12 @@ struct ValueSnapshotEditView: View {
                                     .resizable()
                                     .aspectRatio(contentMode: .fit)
                                     .frame(width: displayWidth, height: displayHeight)
-                                    .cornerRadius(8)
+                                    .clipShape(.rect(cornerRadius: 8))
                                 Spacer()
                             }
                         } else {
                             Text("Failed to load image")
-                                .foregroundColor(.red)
+                                .foregroundStyle(.red)
                         }
                         #endif
 

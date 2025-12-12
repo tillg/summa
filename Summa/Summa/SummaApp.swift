@@ -53,7 +53,7 @@ struct SummaApp: App {
                             #elseif os(macOS)
                             .background(Color(nsColor: .windowBackgroundColor))
                             #endif
-                            .cornerRadius(16)
+                            .clipShape(.rect(cornerRadius: 16))
                             .shadow(radius: 10)
                         }
                     }

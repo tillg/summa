@@ -67,13 +67,13 @@ struct ValueSnapshotListEntryView: View {
             // Blue = New, needs to be analyzed
             Image(systemName: "photo")
                 .font(.caption2)
-                .foregroundColor(.blue)
+                .foregroundStyle(.blue)
         case .analyzing:
             // Spinning animation = Analysis running
             HStack(spacing: 2) {
                 Image(systemName: "photo")
                     .font(.caption2)
-                    .foregroundColor(.blue)
+                    .foregroundStyle(.blue)
                 ProgressView()
                     .scaleEffect(0.5)
                     .frame(width: 8, height: 8)
@@ -82,22 +82,22 @@ struct ValueSnapshotListEntryView: View {
             // Green = Analysis successful
             Image(systemName: "photo")
                 .font(.caption2)
-                .foregroundColor(.green)
+                .foregroundStyle(.green)
         case .analysisCompletePartial:
             // Orange = Partially successful
             Image(systemName: "photo")
                 .font(.caption2)
-                .foregroundColor(.orange)
+                .foregroundStyle(.orange)
         case .analysisFailed:
             // Red = Analysis failed
             Image(systemName: "photo")
                 .font(.caption2)
-                .foregroundColor(.red)
+                .foregroundStyle(.red)
         case .humanConfirmed:
             // Gray = Human confirmed (neutral state)
             Image(systemName: "photo")
                 .font(.caption2)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -125,7 +125,7 @@ struct ValueSnapshotListEntryView: View {
                 if let series = snapshot.series {
                     Text(series.name)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
                 Spacer()
 
@@ -149,7 +149,7 @@ struct ValueSnapshotListEntryView: View {
                 if let series = snapshot.series {
                     Text(series.name)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer()

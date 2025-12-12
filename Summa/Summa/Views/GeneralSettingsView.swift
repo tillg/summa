@@ -17,7 +17,7 @@ struct GeneralSettingsView: View {
                 Text("Summa v1.0")
                     .font(.headline)
                 Text("Personal wealth tracking for iOS, iPadOS, and macOS")
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                     .font(.caption)
             }
         }

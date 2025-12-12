@@ -23,11 +23,12 @@ struct SeriesManagementView: View {
         List {
             Section {
                 ForEach(allSeries) { series in
-                    SeriesRowView(series: series)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            showingEditSeries = series
-                        }
+                    Button {
+                        showingEditSeries = series
+                    } label: {
+                        SeriesRowView(series: series)
+                    }
+                    .buttonStyle(.plain)
                     #if os(iOS)
                     .swipeActions {
                         if !series.isDefault {

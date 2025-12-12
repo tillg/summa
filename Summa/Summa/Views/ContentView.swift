@@ -217,7 +217,7 @@ struct ContentView: View {
             HStack {
                 Text("Value history")
                     .font(.headline)
-                    .foregroundColor(.primary)
+                    .foregroundStyle(.primary)
                 Spacer()
             }
             .padding(.horizontal)

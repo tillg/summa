@@ -1,24 +1,333 @@
-AI Generated SWIFT code often has these problems. Make sure to avoid or fix them!
+# Common Issues in AI-Generated Swift Code
 
-Every time you see foregroundColor(), switch it out for foregroundStyle(). It’s the same number of characters to type, but the former is deprecated, whereas the latter supports more advanced features like gradients.
-Replace cornerRadius() with clipShape(.rect(cornerRadius:)). Again, the former is deprecated, whereas the latter offers more advanced features such as uneven rounded rectangles.
-The onChange() modifier should not be used in its 1-parameter variant. Either accept two parameters or none, but the old variant is unsafe and deprecated.
-If you see the old tabItem() modifier, replace it with the new Tab API instead. This lets you benefit from the new type-safe tab selection, and also adopt things like the iOS 26 search tab design.
-Replace almost all use of onTapGesture() with an actual button – the only exceptions are where you need to know a tap’s location or the number of taps. This is significantly better for VoiceOver, but also means things like eye tracking on visionOS works better.
-Replace ObservableObject with the @Observable macro, unless you specifically rely on the Combine publisher for some reason. This lets your code be simpler and faster too.
-Be careful if you see @Attribute(.unique) in SwiftData model definitions – this does not work with CloudKit.
-If it break ups views by placing things into computed properties, tell it to split them out into separate SwiftUI views instead. This is important for performance when using @Observable – computed properties do not benefit from the intelligent view invalidation of @Observable.
-Some LLMs (particularly Claude) love to force specific font sizes – search for .font(.system(size: and replace as many of them as you can using Dynamic Type fonts. (If you can support iOS 26 or later, you can also use .font(.body.scaled(by: 1.5)) and similar.)
-Watch out for using the old, inline destination NavigationLink API in lists, and replace it with navigationDestination(for:) or similar.
-Expect to see button labels being made with Label rather than the newer, inline API (Button("Tap me", systemImage: "plus", action: whatever)), or, worse, with just an image – it’s a real problem for VoiceOver users.
-Replace code like ForEach(Array(x.enumerated()), id: \.element.id) with ForEach(x.enumerated(), id: \.element.id) – we don’t need the Array initializer.
-You can safely replace the longer code to find the documents directory with just URL.documentsDirectory.
-Every time you see NavigationView replace it with NavigationStack. The only reason to stay with the former is if you still need to support iOS 15.
-Expect to see Task.sleep(nanoseconds:) back from the dead. You’re looking for Task.sleep(for:) with values such as .seconds(1).
-I know the resulting code is longer, but try to replace C-style number formatting with the safer versions. For example, Text(String(format: "%.2f", abs(myNumber))) can be Text(abs(change), format: .number.precision(.fractionLength(2))).
-Watch out for it placing lots of types in a single file – it’s a fantastic way to guarantee longer build times.
-If you’re rendering SwiftUI views, you should replace UIGraphicsImageRenderer with ImageRenderer.
-All three popular LLMs seem to enjoy over-using the fontWeight() modifier. See above about Dynamic Type, but also remember that fontWeight(.bold) and bold() do not always produce the same result.
-If the LLM hits a concurrency problem, you can expect to see DispatchQueue.main.async used an unreasonable number of times. (We only have ourselves to blame for this, but still – ditch it!)
-If you’re working with a new app project, main actor isolation is on by default so you don’t need to mark things with @MainActor.
-And there there’s GeometryReader – boy oh boy do LLMs love GeometryReader, often combined with the other cardinal sin of adding fixed frame sizes where they don’t belong. Please consider some of the alternatives instead, including visualEffect() and containerRelativeFrame().
+AI-generated Swift code often contains outdated patterns, deprecated APIs, and accessibility issues. This guide helps identify and fix these problems to ensure modern, maintainable SwiftUI code.
+
+## UI Styling & Modifiers
+
+### 1. Use `foregroundStyle()` instead of `foregroundColor()`
+
+Replace deprecated `foregroundColor()` with `foregroundStyle()`:
+
+```swift
+// ❌ Deprecated
+Text("Hello").foregroundColor(.red)
+
+// ✅ Modern
+Text("Hello").foregroundStyle(.red)
+```
+
+`foregroundStyle()` supports advanced features like gradients while maintaining the same character count.
+
+### 2. Use `clipShape()` instead of `cornerRadius()`
+
+Replace deprecated `cornerRadius()` with `clipShape(.rect(cornerRadius:))`:
+
+```swift
+// ❌ Deprecated
+RoundedRectangle(cornerRadius: 10)
+
+// ✅ Modern
+.clipShape(.rect(cornerRadius: 10))
+```
+
+The modern API offers advanced features like uneven rounded rectangles.
+
+### 3. Avoid deprecated `onChange()` variants
+
+Do not use the 1-parameter `onChange()` variant:
+
+```swift
+// ❌ Unsafe and deprecated
+.onChange(of: value) { doSomething() }
+
+// ✅ Safe options
+.onChange(of: value) { oldValue, newValue in doSomething() }
+.onChange(of: value, doSomething)
+```
+
+### 4. Replace `tabItem()` with new Tab API
+
+Use the modern Tab API for type-safe tab selection:
+
+```swift
+// ❌ Old API
+.tabItem { Label("Home", systemImage: "house") }
+
+// ✅ Modern Tab API
+Tab("Home", systemImage: "house") { HomeView() }
+```
+
+This enables iOS 26 search tab design and type-safe selection.
+
+## Accessibility & Interaction
+
+### 5. Replace `onTapGesture()` with Button
+
+Use actual Button views instead of `onTapGesture()` for better accessibility:
+
+```swift
+// ❌ Poor accessibility
+Text("Tap me").onTapGesture { doSomething() }
+
+// ✅ Better for VoiceOver and eye tracking
+Button("Tap me") { doSomething() }
+```
+
+Exception: Only use `onTapGesture()` when you need tap location or tap count.
+
+### 6. Use inline Button API with system images
+
+Create buttons with the modern inline API:
+
+```swift
+// ❌ Verbose
+Button(action: save) {
+    Label("Save", systemImage: "plus")
+}
+
+// ✅ Concise and accessible
+Button("Save", systemImage: "plus", action: save)
+```
+
+Avoid using just an image without a label—it's problematic for VoiceOver users.
+
+## State Management & Architecture
+
+### 7. Use `@Observable` instead of `ObservableObject`
+
+Replace `ObservableObject` with the `@Observable` macro:
+
+```swift
+// ❌ Old pattern
+class ViewModel: ObservableObject {
+    @Published var count = 0
+}
+
+// ✅ Modern pattern
+@Observable
+class ViewModel {
+    var count = 0
+}
+```
+
+Exception: Keep `ObservableObject` if you specifically need the Combine publisher.
+
+### 8. Split computed properties into separate views
+
+Extract computed properties into separate SwiftUI views for better performance:
+
+```swift
+// ❌ Computed property (poor @Observable performance)
+var header: some View {
+    Text("Header")
+}
+
+// ✅ Separate view (benefits from @Observable invalidation)
+struct HeaderView: View {
+    var body: some View {
+        Text("Header")
+    }
+}
+```
+
+## SwiftData & CloudKit
+
+### 9. Avoid `@Attribute(.unique)` with CloudKit
+
+Be careful with unique attributes in SwiftData models:
+
+```swift
+// ❌ Does not work with CloudKit
+@Attribute(.unique) var identifier: String
+
+// ✅ Handle uniqueness in your code
+var identifier: String
+```
+
+## Typography & Dynamic Type
+
+### 10. Use Dynamic Type fonts instead of fixed sizes
+
+Replace fixed font sizes with Dynamic Type:
+
+```swift
+// ❌ Fixed size (poor accessibility)
+.font(.system(size: 18))
+
+// ✅ Dynamic Type
+.font(.body)
+
+// ✅ iOS 26+ scaled fonts
+.font(.body.scaled(by: 1.5))
+```
+
+### 11. Use semantic font weights correctly
+
+Be aware that `fontWeight(.bold)` and `bold()` can produce different results:
+
+```swift
+// Different results
+Text("Hello").fontWeight(.bold)
+Text("Hello").bold()
+```
+
+Avoid overusing `fontWeight()` modifier—prefer semantic styles.
+
+## Navigation
+
+### 12. Use modern navigation APIs
+
+Replace old navigation patterns with modern alternatives:
+
+```swift
+// ❌ Deprecated
+NavigationView { /* content */ }
+
+// ✅ Modern
+NavigationStack { /* content */ }
+
+// ❌ Old inline destination
+NavigationLink(destination: DetailView()) { Text("Go") }
+
+// ✅ Modern destination modifier
+NavigationLink("Go", value: item)
+    .navigationDestination(for: Item.self) { DetailView($0) }
+```
+
+Exception: Only use `NavigationView` if you need to support iOS 15.
+
+## Collection Views
+
+### 13. Remove unnecessary Array initialization in ForEach
+
+Simplify enumerated ForEach:
+
+```swift
+// ❌ Unnecessary Array initializer
+ForEach(Array(items.enumerated()), id: \.element.id) { /* ... */ }
+
+// ✅ Direct enumeration
+ForEach(items.enumerated(), id: \.element.id) { /* ... */ }
+```
+
+## Async & Concurrency
+
+### 14. Use modern Task.sleep API
+
+Replace nanosecond-based sleep with duration-based API:
+
+```swift
+// ❌ Old API
+try await Task.sleep(nanoseconds: 1_000_000_000)
+
+// ✅ Modern API
+try await Task.sleep(for: .seconds(1))
+```
+
+### 15. Avoid overusing DispatchQueue.main.async
+
+Replace DispatchQueue with modern concurrency:
+
+```swift
+// ❌ Old pattern
+DispatchQueue.main.async { updateUI() }
+
+// ✅ Modern pattern
+await MainActor.run { updateUI() }
+
+// ✅ Or use @MainActor isolation
+@MainActor
+func updateUI() { /* ... */ }
+```
+
+### 16. Main actor isolation is default in new projects
+
+Don't add unnecessary `@MainActor` annotations:
+
+```swift
+// ❌ Redundant in new projects
+@MainActor
+struct ContentView: View { /* ... */ }
+
+// ✅ Already isolated by default
+struct ContentView: View { /* ... */ }
+```
+
+## File System & Formatting
+
+### 17. Use URL.documentsDirectory
+
+Replace verbose document directory code:
+
+```swift
+// ❌ Verbose
+FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+
+// ✅ Concise
+URL.documentsDirectory
+```
+
+### 18. Use type-safe number formatting
+
+Replace C-style format strings with type-safe formatters:
+
+```swift
+// ❌ C-style formatting
+Text(String(format: "%.2f", abs(myNumber)))
+
+// ✅ Type-safe formatting
+Text(abs(myNumber), format: .number.precision(.fractionLength(2)))
+```
+
+## Rendering & Layout
+
+### 19. Use ImageRenderer for SwiftUI views
+
+Replace UIGraphicsImageRenderer with SwiftUI's ImageRenderer:
+
+```swift
+// ❌ UIKit approach
+let renderer = UIGraphicsImageRenderer(size: size)
+
+// ✅ SwiftUI approach
+let renderer = ImageRenderer(content: myView)
+```
+
+### 20. Minimize GeometryReader usage
+
+Consider alternatives to GeometryReader:
+
+```swift
+// ❌ Overused GeometryReader
+GeometryReader { geometry in
+    Text("Hello")
+        .frame(width: geometry.size.width)
+}
+
+// ✅ Modern alternatives
+Text("Hello")
+    .visualEffect { content, proxy in /* ... */ }
+    .containerRelativeFrame(.horizontal)
+```
+
+Use `visualEffect()` and `containerRelativeFrame()` instead of fixed frame sizes.
+
+## Code Organization
+
+### 21. Keep types in separate files
+
+Avoid placing multiple types in a single file:
+
+```swift
+// ❌ Poor organization (longer build times)
+// AllModels.swift containing 10+ types
+
+// ✅ Better organization
+// User.swift
+// Order.swift
+// Product.swift
+```
+
+---
+
+*These patterns help ensure modern, maintainable, and accessible SwiftUI code.*
