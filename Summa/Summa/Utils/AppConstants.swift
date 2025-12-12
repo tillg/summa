@@ -22,7 +22,7 @@ enum AppConstants {
 
     enum Chart {
         /// Line width for chart lines
-        static let lineWidth: CGFloat = 3
+        static let lineWidth: CGFloat = 5
 
         /// Minimum height for chart area
         static let minHeight: CGFloat = 100

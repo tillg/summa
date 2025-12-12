@@ -22,7 +22,7 @@ struct ValueSnapshotChart: View {
     @Binding var visibleSeriesIDs: Set<UUID>
     var horizontalSizeClass: UserInterfaceSizeClass?
 
-    @State private var selectedPeriod: Date = Calendar.current.date(byAdding: .day, value: AppConstants.Chart.weekDays, to: Date.now) ?? Date.now
+    @State private var selectedPeriod: Date = Calendar.current.date(byAdding: .year, value: AppConstants.Chart.allTimeDuration, to: Date.now) ?? Date.now
 
     private var valuesToDraw: [ValueSnapshot] {
         valueHistory.filter { snapshot in
@@ -149,7 +149,51 @@ struct ValueSnapshotChart: View {
     }
 }
 
-#Preview {
+#Preview("Chart with Data") {
+    // Create 3 series with different colors
+    let series1 = Series(name: "Savings Account", color: "#4CAF50", sortOrder: 0)
+    let series2 = Series(name: "Stock Portfolio", color: "#2196F3", sortOrder: 1)
+    let series3 = Series(name: "Crypto Wallet", color: "#FF9800", sortOrder: 2)
+
+    let allSeries = [series1, series2, series3]
+
+    // Generate realistic data for the last year
+    var snapshots: [ValueSnapshot] = []
+    let calendar = Calendar.current
+    let now = Date()
+
+    // Generate weekly data points for the last year
+    for weekOffset in stride(from: -52, through: 0, by: 1) {
+        guard let date = calendar.date(byAdding: .weekOfYear, value: weekOffset, to: now) else { continue }
+
+        // Series 1: Savings - steady growth from $10,000 to $12,000
+        let savings = 10000 + Double(weekOffset + 52) * 40 + Double.random(in: -200...200)
+        let snap1 = ValueSnapshot(on: date, value: savings, series: series1, humanConfirmed: true)
+        snapshots.append(snap1)
+
+        // Series 2: Stocks - more volatile, general upward trend from $25,000 to $32,000
+        let stocks = 25000 + Double(weekOffset + 52) * 135 + Double.random(in: -1500...1500)
+        let snap2 = ValueSnapshot(on: date, value: stocks, series: series2, humanConfirmed: true)
+        snapshots.append(snap2)
+
+        // Series 3: Crypto - very volatile, but trending up from $5,000 to $8,000
+        let crypto = 5000 + Double(weekOffset + 52) * 58 + Double.random(in: -800...800)
+        let snap3 = ValueSnapshot(on: date, value: crypto, series: series3, humanConfirmed: true)
+        snapshots.append(snap3)
+    }
+
+    return ValueSnapshotChart(
+        valueHistory: snapshots,
+        allSeries: allSeries,
+        visibleSeriesIDs: .constant(Set(allSeries.map { $0.id })),
+        horizontalSizeClass: .regular
+    )
+    .modelContainer(for: [ValueSnapshot.self, Series.self])
+    .padding()
+    .frame(height: 400)
+}
+
+#Preview("Empty Chart") {
     ValueSnapshotChart(
         valueHistory: [],
         allSeries: [],
