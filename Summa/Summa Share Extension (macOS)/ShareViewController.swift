@@ -7,15 +7,6 @@ import AppKit
 import UniformTypeIdentifiers
 import SwiftData
 
-// Extension-specific logging prefix
-private func extLog(_ message: String) {
-    log("🍎 [macOS-EXT] \(message)")
-}
-
-private func extLogError(_ message: String) {
-    logError("🍎 [macOS-EXT] \(message)")
-}
-
 class ShareViewController: NSViewController {
 
     // Access shared SwiftData container via App Group
@@ -26,12 +17,16 @@ class ShareViewController: NSViewController {
 
     override init(nibName nibNameOrNil: NSNib.Name?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
-        extLog("🚀 ShareViewController INIT called")
+        #if DEBUG
+        log("🚀 ShareViewController INIT called")
+        #endif
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
-        extLog("🚀 ShareViewController INIT (coder) called")
+        #if DEBUG
+        log("🚀 ShareViewController INIT (coder) called")
+        #endif
     }
 
     override func loadView() {
@@ -44,25 +39,25 @@ class ShareViewController: NSViewController {
         super.viewDidLoad()
 
         #if DEBUG
-        extLog("=== macOS Share Extension viewDidLoad START ===")
+        log("=== macOS Share Extension viewDidLoad START ===")
         #endif
 
         // Initialize model container
         do {
             #if DEBUG
-            extLog("Attempting to create model container...")
+            log("Attempting to create model container...")
             #endif
 
             modelContainer = try ModelContainerFactory.createSharedContainer()
 
             #if DEBUG
-            extLog("Model container created successfully")
+            log("Model container created successfully")
             #endif
 
             processSharedImage()
         } catch {
             #if DEBUG
-            extLogError("FATAL ERROR creating model container: \(error)")
+            logError("FATAL ERROR creating model container: \(error)")
             #endif
 
             containerError = error
@@ -84,7 +79,7 @@ class ShareViewController: NSViewController {
 
                 if let error = error {
                     #if DEBUG
-                    extLogError("Error loading image: \(error)")
+                    logError("Error loading image: \(error)")
                     #endif
                     DispatchQueue.main.async {
                         self.completeRequest(success: false)
@@ -124,7 +119,7 @@ class ShareViewController: NSViewController {
         // Ensure we have a valid model container
         guard let modelContainer = modelContainer else {
             #if DEBUG
-            extLogError("ERROR: ModelContainer not available")
+            logError("ERROR: ModelContainer not available")
             #endif
             completeRequest(success: false)
             return
@@ -134,8 +129,8 @@ class ShareViewController: NSViewController {
         let snapshot = ValueSnapshot.fromScreenshot(imageData, date: Date())
 
         #if DEBUG
-        extLog("Created snapshot with state: \(snapshot.analysisState)")
-        extLog("Has image data: \(snapshot.sourceImage != nil)")
+        log("Created snapshot with state: \(snapshot.analysisState)")
+        log("Has image data: \(snapshot.sourceImage != nil)")
         #endif
 
         // Insert and save on background thread
@@ -146,7 +141,7 @@ class ShareViewController: NSViewController {
                 try context.save()
 
                 #if DEBUG
-                extLog("Snapshot saved to SwiftData")
+                log("Snapshot saved to SwiftData")
                 #endif
 
                 // Give CloudKit a moment to schedule the export before extension closes
@@ -158,7 +153,7 @@ class ShareViewController: NSViewController {
                 }
             } catch {
                 #if DEBUG
-                extLogError("Error saving snapshot: \(error)")
+                logError("Error saving snapshot: \(error)")
                 #endif
                 await MainActor.run {
                     self.completeRequest(success: false)
@@ -170,7 +165,7 @@ class ShareViewController: NSViewController {
     private func completeRequest(success: Bool) {
         DispatchQueue.main.async {
             #if DEBUG
-            extLog("completeRequest called with success=\(success)")
+            log("completeRequest called with success=\(success)")
             #endif
 
             if success {
@@ -185,7 +180,7 @@ class ShareViewController: NSViewController {
     private func showErrorAndDismiss(message: String) {
         DispatchQueue.main.async {
             #if DEBUG
-            extLogError("showErrorAndDismiss: \(message)")
+            logError("showErrorAndDismiss: \(message)")
             #endif
 
             // Just cancel - don't try to show UI in extension

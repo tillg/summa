@@ -1,5 +1,5 @@
 //
-//  ValueSnapshotFormView.swift
+//  ValueSnapshotEditView.swift
 //  Summa
 //
 //  Created by Till Gartner on 10.08.25.
@@ -9,12 +9,6 @@ import Foundation
 import SwiftData
 import SwiftUI
 import PhotosUI
-
-#if os(iOS)
-import UIKit
-#elseif os(macOS)
-import AppKit
-#endif
 
 struct ValueSnapshotEditView: View {
     @Environment(\.dismiss) var dismiss

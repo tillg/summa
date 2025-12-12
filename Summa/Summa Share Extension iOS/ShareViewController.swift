@@ -4,7 +4,6 @@
 //
 
 import UIKit
-import Social
 import UniformTypeIdentifiers
 import SwiftData
 

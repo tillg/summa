@@ -40,9 +40,11 @@ func log(
     file: String = #file,
     line: Int = #line
 ) {
+    #if DEBUG
     let timestamp = timestampFormatter.string(from: Date())
     let className = extractClassName(from: file)
     print("[\(timestamp)] [\(className).\(function):\(line)] \(message)")
+    #endif
 }
 
 // MARK: - Error Logging
