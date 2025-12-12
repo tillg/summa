@@ -30,7 +30,7 @@ struct ContentView: View {
                     regularLayout
                 }
             }
-            .navigationTitle("Summa")
+            .navigationTitle("Summarum")
             .toolbar {
                 #if os(macOS)
                 ToolbarItem(placement: .automatic) {

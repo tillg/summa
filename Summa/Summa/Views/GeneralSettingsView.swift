@@ -14,7 +14,7 @@ struct GeneralSettingsView: View {
     var body: some View {
         Form {
             Section {
-                Text("Summa v1.0")
+                Text("Summarum v1.0")
                     .font(.headline)
                 Text("Personal wealth tracking for iOS, iPadOS, and macOS")
                     .foregroundStyle(.secondary)

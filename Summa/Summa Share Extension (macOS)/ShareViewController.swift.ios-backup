@@ -131,7 +131,7 @@ class ShareViewController: UIViewController {
             if success {
                 // Show brief success message
                 let alert = UIAlertController(
-                    title: "Saved to Summa",
+                    title: "Saved to Summarum",
                     message: "Screenshot ready to process",
                     preferredStyle: .alert
                 )
