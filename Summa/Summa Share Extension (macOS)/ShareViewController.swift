@@ -129,7 +129,7 @@ class ShareViewController: NSViewController {
         let snapshot = ValueSnapshot.fromScreenshot(imageData, date: Date())
 
         #if DEBUG
-        log("Created snapshot with state: \(snapshot.analysisState)")
+        log("Created snapshot from screenshot")
         log("Has image data: \(snapshot.sourceImage != nil)")
         #endif
 

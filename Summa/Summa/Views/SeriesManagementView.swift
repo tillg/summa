@@ -11,8 +11,7 @@ import SwiftData
 struct SeriesManagementView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.modelContext) var modelContext
-
-    let allSeries: [Series]
+    @Query(sort: \Series.sortOrder) var allSeries: [Series]
 
     @State private var showingAddSeries = false
     @State private var showingEditSeries: Series?
@@ -29,18 +28,7 @@ struct SeriesManagementView: View {
                         SeriesRowView(series: series)
                     }
                     .buttonStyle(.plain)
-                    #if os(iOS)
-                    .swipeActions {
-                        if !series.isDefault {
-                            Button(role: .destructive) {
-                                seriesToDelete = series
-                                deleteConfirmationText = ""
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
-                        }
-                    }
-                    #else
+                    #if os(macOS)
                     .contextMenu {
                         if !series.isDefault {
                             Button(role: .destructive) {

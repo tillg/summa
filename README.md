@@ -36,8 +36,6 @@ Priority 1 tests (✅ implemented):
 
 For detailed setup instructions and test configuration, see [TESTING_SETUP.md](TESTING_SETUP.md).
 
-For the complete testing roadmap, see [Specs/06_AUTOMATED_TESTS.md](Specs/06_AUTOMATED_TESTS.md).
-
 ## To dos
 
 * Syncing with iCloud" --> nasty error when not logged in

@@ -15,10 +15,7 @@ struct ValueSnapshotListEntryView: View {
 
     var body: some View {
         Button {
-            // Disable editing while analyzing
-            if snapshot.analysisState != .analyzing {
-                onTap()
-            }
+            onTap()
         } label: {
             rowContent
         }
@@ -28,8 +25,8 @@ struct ValueSnapshotListEntryView: View {
 
     private var rowContent: some View {
         HStack(alignment: .top, spacing: 8) {
-            // Series color indicator (only for humanConfirmed with series)
-            if let series = snapshot.series, snapshot.analysisState == .humanConfirmed {
+            // Series color indicator (left side)
+            if let series = snapshot.series {
                 Circle()
                     .fill(SeriesManager.shared.colorFromHex(series.color))
                     .frame(width: AppConstants.UI.seriesIndicatorSize, height: AppConstants.UI.seriesIndicatorSize)
@@ -46,72 +43,25 @@ struct ValueSnapshotListEntryView: View {
 
             Spacer()
 
-            // Right edge indicators
-            HStack(spacing: 4) {
-                // Image attachment indicator with state encoding
-                if snapshot.sourceImage != nil {
-                    photoIcon
-                }
+            // Image icon (right side) - simple, no color coding or spinner
+            if snapshot.sourceImage != nil {
+                Image(systemName: "photo")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
     }
 
-    // MARK: - Photo Icon with State Encoding
-
-    @ViewBuilder
-    private var photoIcon: some View {
-        switch snapshot.analysisState {
-        case .pendingAnalysis:
-            // Blue = New, needs to be analyzed
-            Image(systemName: "photo")
-                .font(.caption2)
-                .foregroundStyle(.blue)
-        case .analyzing:
-            // Spinning animation = Analysis running
-            HStack(spacing: 2) {
-                Image(systemName: "photo")
-                    .font(.caption2)
-                    .foregroundStyle(.blue)
-                ProgressView()
-                    .scaleEffect(0.5)
-                    .frame(width: 8, height: 8)
-            }
-        case .analysisCompleteFull:
-            // Green = Analysis successful
-            Image(systemName: "photo")
-                .font(.caption2)
-                .foregroundStyle(.green)
-        case .analysisCompletePartial:
-            // Orange = Partially successful
-            Image(systemName: "photo")
-                .font(.caption2)
-                .foregroundStyle(.orange)
-        case .analysisFailed:
-            // Red = Analysis failed
-            Image(systemName: "photo")
-                .font(.caption2)
-                .foregroundStyle(.red)
-        case .humanConfirmed:
-            // Gray = Human confirmed (neutral state)
-            Image(systemName: "photo")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-        }
-    }
-
     // MARK: - Background Color
 
     private var backgroundColor: Color? {
-        switch snapshot.analysisState {
-        case .pendingAnalysis, .analyzing, .analysisCompletePartial, .analysisFailed:
-            return Color.gray.opacity(0.15)
-        case .analysisCompleteFull:
-            return Color.gray.opacity(0.08)  // Light gray
-        case .humanConfirmed:
-            return nil  // No background
+        // Simple rule: grey if robot-created, no background if user-confirmed
+        if !snapshot.humanConfirmed {
+            return Color.gray.opacity(0.12)
         }
+        return nil  // No background (white/system)
     }
 
     // MARK: - Regular Layout (iPad)
@@ -163,12 +113,12 @@ struct ValueSnapshotListEntryView: View {
     }
 }
 
-#Preview("Completed Snapshot - iPhone") {
+#Preview("User-Confirmed Snapshot - iPhone") {
     let previewSeries = Series(name: "Comdirect", color: "#FFC107", sortOrder: 0)
 
     List {
         ValueSnapshotListEntryView(
-            snapshot: ValueSnapshot(on: Date(), value: 1332.00, series: previewSeries, analysisState: .humanConfirmed, dataSource: .human),
+            snapshot: ValueSnapshot(on: Date(), value: 1332.00, series: previewSeries, humanConfirmed: true),
             horizontalSizeClass: .compact,
             onTap: {}
         )
@@ -176,12 +126,12 @@ struct ValueSnapshotListEntryView: View {
     .listStyle(.plain)
 }
 
-#Preview("Completed Snapshot - iPad") {
+#Preview("User-Confirmed Snapshot - iPad") {
     let previewSeries = Series(name: "HVB", color: "#F44336", sortOrder: 0)
 
     List {
         ValueSnapshotListEntryView(
-            snapshot: ValueSnapshot(on: Date(), value: 16000.00, series: previewSeries, analysisState: .humanConfirmed, dataSource: .human),
+            snapshot: ValueSnapshot(on: Date(), value: 16000.00, series: previewSeries, humanConfirmed: true),
             horizontalSizeClass: .regular,
             onTap: {}
         )
@@ -189,68 +139,57 @@ struct ValueSnapshotListEntryView: View {
     .listStyle(.plain)
 }
 
-#Preview("Mixed List - All States - iPhone") {
+#Preview("Mixed States - iPhone") {
     let series1 = Series(name: "Comdirect", color: "#FFC107", sortOrder: 0)
     let series2 = Series(name: "HVB", color: "#F44336", sortOrder: 1)
-    let series3 = Series(name: "Savings", color: "#4CAF50", sortOrder: 2)
 
     // Dummy screenshot data for preview
     let dummyImageData = Data([0xFF, 0xD8, 0xFF, 0xE0])  // JPEG header
 
     List {
-        // 1. pendingAnalysis - Waiting to be analyzed
+        // 1. Needs processing - No value yet, not attempted
         ValueSnapshotListEntryView(
             snapshot: {
-                let snap = ValueSnapshot(on: Date(), value: nil, series: nil, analysisState: .pendingAnalysis, dataSource: .robot)
+                let snap = ValueSnapshot(on: Date(), value: nil, series: nil, humanConfirmed: false)
                 snap.sourceImage = dummyImageData
+                snap.valueExtractionAttempted = false
                 return snap
             }(),
             horizontalSizeClass: .compact,
             onTap: {}
         )
 
-        // 2. analyzing - Currently being processed
+        // 2. Auto-extracted, needs series
         ValueSnapshotListEntryView(
             snapshot: {
-                let snap = ValueSnapshot(on: Date().addingTimeInterval(-60), value: nil, series: nil, analysisState: .analyzing, dataSource: .robot)
+                let snap = ValueSnapshot(on: Date().addingTimeInterval(-3600), value: 1250.50, series: nil, humanConfirmed: false)
                 snap.sourceImage = dummyImageData
+                snap.valueExtractionAttempted = true
                 return snap
             }(),
             horizontalSizeClass: .compact,
             onTap: {}
         )
 
-        // 3. analysisCompleteFull - Successfully extracted value AND series
+        // 3. Auto-extracted with series (complete, grey background since not confirmed)
         ValueSnapshotListEntryView(
             snapshot: {
-                let snap = ValueSnapshot(on: Date().addingTimeInterval(-3600), value: 1250.50, series: series1, analysisState: .analysisCompleteFull, dataSource: .robot)
+                let snap = ValueSnapshot(on: Date().addingTimeInterval(-7200), value: 1250.50, series: series1, humanConfirmed: false)
                 snap.sourceImage = dummyImageData
-                snap.extractedValue = 1250.50
-                snap.analysisConfidence = 0.95
+                snap.valueExtractionAttempted = true
+                snap.fingerprintData = dummyImageData  // Has fingerprint
                 return snap
             }(),
             horizontalSizeClass: .compact,
             onTap: {}
         )
 
-        // 4. analysisCompletePartial - Extracted value but no series
+        // 4. Extraction failed - tried but no value found
         ValueSnapshotListEntryView(
             snapshot: {
-                let snap = ValueSnapshot(on: Date().addingTimeInterval(-7200), value: 5432.10, series: nil, analysisState: .analysisCompletePartial, dataSource: .robot)
+                let snap = ValueSnapshot(on: Date().addingTimeInterval(-10800), value: nil, series: nil, humanConfirmed: false)
                 snap.sourceImage = dummyImageData
-                snap.extractedValue = 5432.10
-                snap.analysisConfidence = 0.88
-                return snap
-            }(),
-            horizontalSizeClass: .compact,
-            onTap: {}
-        )
-
-        // 5. analysisFailed - Analysis failed with error
-        ValueSnapshotListEntryView(
-            snapshot: {
-                let snap = ValueSnapshot(on: Date().addingTimeInterval(-10800), value: nil, series: nil, analysisState: .analysisFailed, dataSource: .robot)
-                snap.sourceImage = dummyImageData
+                snap.valueExtractionAttempted = true
                 snap.analysisError = "No monetary value detected"
                 return snap
             }(),
@@ -258,20 +197,18 @@ struct ValueSnapshotListEntryView: View {
             onTap: {}
         )
 
-        // 6. humanConfirmed (human entered) - Manual entry without screenshot
+        // 5. User-confirmed - Manual entry without screenshot
         ValueSnapshotListEntryView(
-            snapshot: ValueSnapshot(on: Date().addingTimeInterval(-86400), value: 1332.00, series: series2, analysisState: .humanConfirmed, dataSource: .human),
+            snapshot: ValueSnapshot(on: Date().addingTimeInterval(-86400), value: 1332.00, series: series2, humanConfirmed: true),
             horizontalSizeClass: .compact,
             onTap: {}
         )
 
-        // 7. humanConfirmed (robot -> human) - User edited auto-extracted data, with screenshot
+        // 6. User-confirmed - User edited auto-extracted data
         ValueSnapshotListEntryView(
             snapshot: {
-                let snap = ValueSnapshot(on: Date().addingTimeInterval(-172800), value: 16250.00, series: series3, analysisState: .humanConfirmed, dataSource: .human)
+                let snap = ValueSnapshot(on: Date().addingTimeInterval(-172800), value: 16250.00, series: series2, humanConfirmed: true)
                 snap.sourceImage = dummyImageData
-                snap.extractedValue = 16000.00  // Original extracted value was different
-                snap.analysisConfidence = 0.92
                 return snap
             }(),
             horizontalSizeClass: .compact,

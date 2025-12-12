@@ -15,6 +15,7 @@ import AppKit
 struct SummaApp: App {
     @State private var syncMonitor = CloudKitSyncMonitor()
     @State private var analysisService = ScreenshotAnalysisService()
+    @State private var analysisCoordinator = ImageAnalysisCoordinator()
     @State private var showSyncError = false
 
     var sharedModelContainer: ModelContainer = {
@@ -60,6 +61,7 @@ struct SummaApp: App {
                 }
                 .environment(syncMonitor)
                 .environment(analysisService)
+                .environment(analysisCoordinator)
                 .onAppear {
                     // Set model context for SeriesManager
                     Task { @MainActor in

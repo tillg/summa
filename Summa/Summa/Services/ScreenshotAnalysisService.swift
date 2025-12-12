@@ -39,7 +39,7 @@ final class ScreenshotAnalysisService {
     ///   - modelContext: SwiftData model context for persistence
     func analyzeSnapshot(_ snapshot: ValueSnapshot, modelContext: ModelContext) async {
         #if DEBUG
-        log("Starting analysis for snapshot: \(snapshot.date)")
+        log("Starting value extraction for snapshot: \(String(describing: snapshot.date))")
         #endif
 
         // Verify we have screenshot data
@@ -47,7 +47,6 @@ final class ScreenshotAnalysisService {
             #if DEBUG
             log("❌ No screenshot data available")
             #endif
-            snapshot.analysisState = .analysisFailed
             snapshot.analysisError = "No screenshot data available"
             try? modelContext.save()
             return
@@ -57,14 +56,8 @@ final class ScreenshotAnalysisService {
         log("Screenshot data found: \(imageData.count) bytes")
         #endif
 
-        // Set analyzing state and record start time
-        snapshot.analysisState = .analyzing
         snapshot.analysisError = nil
         try? modelContext.save()
-
-        #if DEBUG
-        log("State set to ANALYZING, saved to database")
-        #endif
 
         let analysisStartTime = Date()
 
@@ -103,25 +96,14 @@ final class ScreenshotAnalysisService {
                 snapshot.analysisConfidence = result.confidence
                 snapshot.value = result.value
 
-                // Determine if analysis is full or partial
-                if snapshot.series != nil {
-                    snapshot.analysisState = .analysisCompleteFull
-                    #if DEBUG
-                    log("DEBUG: Analysis complete (FULL): value=\(result.value), series=\(snapshot.series?.name ?? "unknown")")
-                    #endif
-                } else {
-                    snapshot.analysisState = .analysisCompletePartial
-                    #if DEBUG
-                    log("DEBUG Analysis complete (PARTIAL): value=\(result.value), no series")
-                    #endif
-                }
-
+                #if DEBUG
+                log("✅ Value extracted: \(result.value)")
+                #endif
             } else {
                 // No monetary value found
-                snapshot.analysisState = .analysisFailed
                 snapshot.analysisError = "No monetary value detected in screenshot"
                 #if DEBUG
-                log("DEBUG: Analysis FAILED: No monetary value detected")
+                log("❌ No monetary value detected")
                 #endif
             }
 
@@ -130,24 +112,19 @@ final class ScreenshotAnalysisService {
 
         } catch {
             // Handle analysis failure
-            snapshot.analysisState = .analysisFailed
             snapshot.analysisError = error.localizedDescription
-        }
-
-        // Ensure minimum time in "analyzing" state for UI feedback
-        let elapsedTime = Date().timeIntervalSince(analysisStartTime)
-        let minimumAnalysisTime = AppConstants.Analysis.minimumAnalysisTime
-
-        if elapsedTime < minimumAnalysisTime {
-            let remainingTime = minimumAnalysisTime - elapsedTime
             #if DEBUG
-            log("Analysis completed in \(String(format: "%.2f", elapsedTime))s, waiting \(String(format: "%.2f", remainingTime))s more for UI feedback...")
+            log("❌ Analysis failed: \(error.localizedDescription)")
             #endif
-            try? await Task.sleep(nanoseconds: UInt64(remainingTime * 1_000_000_000))
         }
 
         // Save changes
         try? modelContext.save()
+
+        #if DEBUG
+        let elapsedTime = Date().timeIntervalSince(analysisStartTime)
+        log("Value extraction completed in \(String(format: "%.2f", elapsedTime))s")
+        #endif
     }
 
     // MARK: - Private Methods

@@ -60,15 +60,15 @@ enum AppConstants {
 
     enum Analysis {
         /// Minimum time to show "analyzing" state for user feedback
-        /// Longer in DEBUG to observe UI states during development
+        /// Set to 0 to show actual analysis speed
         #if DEBUG
-        static let minimumAnalysisTime: TimeInterval = 10.0
+        static let minimumAnalysisTime: TimeInterval = 0.0
         #else
-        static let minimumAnalysisTime: TimeInterval = 3.0
+        static let minimumAnalysisTime: TimeInterval = 0.0
         #endif
 
         /// Initial UI refresh delay before starting analysis
-        static let uiRefreshDelay: TimeInterval = 0.1
+        static let uiRefreshDelay: TimeInterval = 0.0
     }
 
     // MARK: - UI Configuration

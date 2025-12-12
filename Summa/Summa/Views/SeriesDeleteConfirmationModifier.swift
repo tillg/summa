@@ -44,18 +44,32 @@ struct SeriesDeleteConfirmationModifier: ViewModifier {
                     if let series = seriesToDelete,
                        confirmationText == series.name,
                        !series.isDefault {
-                        modelContext.delete(series)
+                        // Store values before dismissing
+                        let seriesToDeleteName = series.name
 
-                        let result = SaveErrorHandler.save(modelContext, operation: "Delete series '\(series.name)'")
-                        if case .failure(let error) = result {
-                            saveError = error
-                            // Don't clear the confirmation state so user can retry
-                            return
-                        }
-
+                        // Dismiss alert first
                         seriesToDelete = nil
                         confirmationText = ""
-                        onDelete?()
+
+                        // Perform deletion after alert dismisses to avoid SwiftUI List animation crash
+                        Task { @MainActor in
+                            // Wait for alert to dismiss
+                            try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
+
+                            // Disable animations to prevent List crash
+                            var transaction = Transaction()
+                            transaction.disablesAnimations = true
+                            withTransaction(transaction) {
+                                modelContext.delete(series)
+
+                                let result = SaveErrorHandler.save(modelContext, operation: "Delete series '\(seriesToDeleteName)'")
+                                if case .failure(let error) = result {
+                                    saveError = error
+                                } else {
+                                    onDelete?()
+                                }
+                            }
+                        }
                     }
                 }
                 .disabled(confirmationText != seriesToDelete?.name || seriesToDelete?.isDefault == true)

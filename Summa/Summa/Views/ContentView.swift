@@ -12,6 +12,7 @@ struct ContentView: View {
     @Environment(\.modelContext) var modelContext
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     @Environment(ScreenshotAnalysisService.self) var analysisService
+    @Environment(ImageAnalysisCoordinator.self) var analysisCoordinator
     @Environment(CloudKitSyncMonitor.self) var syncMonitor
     @Query var valueHistory: [ValueSnapshot]
     @Query(sort: \Series.sortOrder) var allSeries: [Series]
@@ -88,7 +89,7 @@ struct ContentView: View {
             }
             .sheet(isPresented: $showingSeriesManagement) {
                 NavigationStack {
-                    SeriesManagementView(allSeries: allSeries)
+                    SeriesManagementView()
                 }
                 .environment(\.modelContext, modelContext)
                 #if os(macOS)
@@ -99,34 +100,15 @@ struct ContentView: View {
                 // Initialize all series as visible by default
                 visibleSeriesIDs = Set(allSeries.map { $0.id })
 
-                #if DEBUG
-                // Debug: Log what data we have
-                log("Total snapshots loaded: \(valueHistory.count)")
-                let pendingAnalysisCount = valueHistory.filter { $0.analysisState == .pendingAnalysis }.count
-                let analyzingCount = valueHistory.filter { $0.analysisState == .analyzing }.count
-                let partialCount = valueHistory.filter { $0.analysisState == .analysisCompletePartial }.count
-                let fullCount = valueHistory.filter { $0.analysisState == .analysisCompleteFull }.count
-                let failedCount = valueHistory.filter { $0.analysisState == .analysisFailed }.count
-                let completedCount = valueHistory.filter { $0.analysisState == .humanConfirmed }.count
-                log("   - Pending Analysis: \(pendingAnalysisCount)")
-                log("   - Analyzing: \(analyzingCount)")
-                log("   - Complete Partial: \(partialCount)")
-                log("   - Complete Full: \(fullCount)")
-                log("   - Failed: \(failedCount)")
-                log("   - Human Confirmed: \(completedCount)")
-
-                if pendingAnalysisCount > 0 {
-                    log("Snapshots pending analysis:")
-                    for snapshot in valueHistory.filter({ $0.analysisState == .pendingAnalysis }) {
-                        log("   - Date: \(snapshot.date), Has screenshot: \(snapshot.sourceImage != nil)")
-                    }
-                }
-                #endif
-
                 #if os(macOS)
                 // Setup NotificationCenter observers for macOS menu commands
                 setupMacOSMenuObservers()
                 #endif
+
+                // Trigger analysis on initial load
+                await analysisCoordinator.generateMissingFingerprints(modelContext: modelContext)
+                await analysisCoordinator.extractPendingValues(modelContext: modelContext)
+                await analysisCoordinator.matchUnassignedSeries(modelContext: modelContext)
             }
             .onChange(of: allSeries) { _, newSeries in
                 // Ensure newly added series are visible by default
@@ -137,10 +119,16 @@ struct ContentView: View {
                 }
             }
             .onChange(of: syncMonitor.lastImportDate) { _, _ in
-                // Force UI refresh when CloudKit imports new data
                 #if DEBUG
-                log("CloudKit import detected, refreshing UI...")
+                log("CloudKit import detected, triggering analysis...")
                 #endif
+
+                // Just call all three services - they decide internally what needs processing
+                Task {
+                    await analysisCoordinator.generateMissingFingerprints(modelContext: modelContext)
+                    await analysisCoordinator.extractPendingValues(modelContext: modelContext)
+                    await analysisCoordinator.matchUnassignedSeries(modelContext: modelContext)
+                }
             }
     }
 
@@ -235,28 +223,6 @@ struct ContentView: View {
                     #if os(iOS)
                     .hoverEffect(.lift)
                     #endif
-                    .task(id: value.analysisState) {
-                        // Automatically trigger analysis when state is pendingAnalysis
-                        #if DEBUG
-                        if value.analysisState == .pendingAnalysis {
-                            log(".task triggered for snapshot in pendingAnalysis state")
-                        }
-                        #endif
-
-                        if value.analysisState == .pendingAnalysis {
-                            // Wait for UI to fully render and for user to see the row
-                            // This ensures the analyzing state is visible
-                            #if DEBUG
-                            log("⏱️ Waiting 2 seconds before starting analysis to ensure UI is visible...")
-                            #endif
-                            try? await Task.sleep(nanoseconds: 2_000_000_000)  // 2 seconds
-
-                            #if DEBUG
-                            log("Starting analysis now")
-                            #endif
-                            await analysisService.analyzeSnapshot(value, modelContext: modelContext)
-                        }
-                    }
                 }
             }
             .listStyle(.plain)

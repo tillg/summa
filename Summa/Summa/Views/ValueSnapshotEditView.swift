@@ -40,9 +40,8 @@ struct ValueSnapshotEditView: View {
             snapshot.value = value
             snapshot.series = selectedSeries
 
-            // Mark as humanConfirmed - user has opened edit view and validated data
-            snapshot.analysisState = .humanConfirmed
-            snapshot.dataSource = .human
+            // Mark as humanConfirmed - user has explicitly saved/edited this snapshot
+            snapshot.humanConfirmed = true
 
             // Handle image update
             if let selectedImage = selectedImage,
@@ -60,8 +59,7 @@ struct ValueSnapshotEditView: View {
                 on: date,
                 value: value,
                 series: selectedSeries,
-                analysisState: .humanConfirmed,
-                dataSource: .human
+                humanConfirmed: true
             )
 
             // Add image if selected

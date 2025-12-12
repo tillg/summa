@@ -98,8 +98,8 @@ class ShareViewController: UIViewController {
         let snapshot = ValueSnapshot.fromScreenshot(imageData, date: date)
 
         #if DEBUG
-        log("Created snapshot with state: \(snapshot.analysisState)")
-        log("Has image data: \(snapshot.sourceImage != nil)")
+        log("Created snapshot from screenshot")
+        log("Has image data: \(snapshot.sourceImage != nil), Date: \(String(describing: snapshot.date))")
         #endif
 
         // Insert and save on background thread

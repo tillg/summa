@@ -72,6 +72,7 @@ struct ValueSnapshotChart: View {
                                         y: .value("Value", value),
                                         series: .value("Series", series.name)
                                     )
+                                    .interpolationMethod(.catmullRom)
                                     .foregroundStyle(SeriesManager.shared.colorFromHex(series.color))
                                     .lineStyle(.init(lineWidth: AppConstants.Chart.lineWidth, lineCap: .round, lineJoin: .round))
                                 }
